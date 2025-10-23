@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Documents - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Convert Documents to E-Books</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert" class="active">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <main class="convert-page">
+            <div class="tool-section">
+                <h2>Document Conversion</h2>
+                <p>Upload your markdown, text, or HTML files to create professional e-books in multiple formats.</p>
+
+                <form id="convert-form" enctype="multipart/form-data">
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label>Upload Documents</label>
+                        <div class="file-drop-zone" id="file-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📁</span>
+                                <p>Drag & drop files here or click to browse</p>
+                                <p class="file-info">Supports: .md, .txt, .html, .docx, .epub, .odt, .rtf, .tex, .rst, .org</p>
+                            </div>
+                            <input type="file" id="file-input" name="files" multiple accept=".md,.markdown,.txt,.html,.htm,.docx,.epub,.odt,.rtf,.tex,.latex,.rst,.org" style="display: none;">
+                        </div>
+                        <div id="file-list" class="uploaded-files"></div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">Book Title</label>
+                            <input type="text" id="title" name="title" placeholder="Enter book title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="author">Author Name</label>
+                            <input type="text" id="author" name="author" placeholder="Enter author name" required>
+                        </div>
+                    </div>
+
+                    <!-- Output Formats -->
+                    <div class="form-group">
+                        <label>Output Formats</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="epub" checked>
+                                <span>EPUB (E-Reader)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="pdf" checked>
+                                <span>PDF (Print/Digital)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="html">
+                                <span>HTML (Web)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="docx">
+                                <span>DOCX (Word)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="md">
+                                <span>MD (Markdown)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <details class="advanced-options">
+                        <summary>Advanced Options</summary>
+                        <div class="form-group">
+                            <label for="subtitle">Subtitle (optional)</label>
+                            <input type="text" id="subtitle" name="subtitle" placeholder="Enter subtitle">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="include_toc" checked>
+                                <span>Include Table of Contents</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="normalize_text" checked>
+                                <span>Normalize text encoding</span>
+                            </label>
+                        </div>
+                    </details>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span>Convert to E-Book</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                    </div>
+                </form>
+
+                <!-- Progress Section -->
+                <div id="progress-section" class="progress-section" style="display: none;">
+                    <h3>Conversion Progress</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">Preparing conversion...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" class="results-section" style="display: none;">
+                    <h3>Conversion Complete</h3>
+                    <div id="results-content"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // File drop zone handling
+        const dropZone = document.getElementById('file-drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            fileInput.files = e.dataTransfer.files;
+            displayFiles();
+        });
+
+        fileInput.addEventListener('change', displayFiles);
+
+        function displayFiles() {
+            fileList.innerHTML = '';
+            const files = fileInput.files;
+
+            if (files.length === 0) return;
+
+            for (let i = 0; i < files.length; i++) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${files[i].name}</span>
+                    <span class="file-size">${formatFileSize(files[i].size)}</span>
+                    <button type="button" class="btn-remove" onclick="removeFile(${i})">×</button>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        }
+
+        function removeFile(index) {
+            const dt = new DataTransfer();
+            const files = fileInput.files;
+
+            for (let i = 0; i < files.length; i++) {
+                if (i !== index) dt.items.add(files[i]);
+            }
+
+            fileInput.files = dt.files;
+            displayFiles();
+        }
+
+        function resetForm() {
+            document.getElementById('convert-form').reset();
+            fileList.innerHTML = '';
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'none';
+        }
+
+        // Form submission
+        document.getElementById('convert-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            // Show progress
+            document.getElementById('progress-section').style.display = 'block';
+            document.getElementById('results-section').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResults(result);
+                } else {
+                    showError(result.error || 'Conversion failed');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        function showResults(result) {
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="success-message">
+                    <p>${result.message}</p>
+                </div>
+                <div class="file-downloads">
+                    ${result.files.map(file => `
+                        <div class="download-item">
+                            <span>${file.name}</span>
+                            <a href="/api/download/${file.path}" class="btn btn-small" download>Download</a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <p>Error: ${message}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

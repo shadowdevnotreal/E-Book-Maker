@@ -1,0 +1,25 @@
+# E-Book Maker - Python Dependencies
+
+# Web Framework
+Flask>=2.3.0
+
+# Image Processing (for cover generation and watermarking)
+Pillow>=10.0.0
+
+# PDF Processing (for watermarking)
+PyPDF2>=3.0.0
+reportlab>=4.0.0
+
+# DOCX Processing (for Word document watermarking)
+python-docx>=0.8.11
+
+# Additional utilities
+Werkzeug>=2.3.0
+
+# Optional: For enhanced terminal UI (not required)
+# rich>=13.0.0
+
+# Note: System dependencies (install separately):
+# - pandoc (REQUIRED for document conversion)
+# - wkhtmltopdf (OPTIONAL for PDF generation)
+# - pdflatex/texlive (OPTIONAL for advanced PDF formatting)

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Covers - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Book Cover Creation</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers" class="active">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <main class="covers-page">
+            <div class="tool-tabs">
+                <button class="tool-tab-btn active" data-tab="create">Create New Cover</button>
+                <button class="tool-tab-btn" data-tab="convert">Convert Existing Cover</button>
+            </div>
+
+            <!-- Create Cover Tab -->
+            <div id="create-tab" class="tool-tab-content active">
+                <h2>Create Book Cover</h2>
+                <p>Design a professional book cover from scratch with custom text and styling.</p>
+
+                <form id="create-cover-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cover-type">Cover Type</label>
+                            <select id="cover-type" name="type" required>
+                                <option value="ebook">E-Book (2560 x 1600 px)</option>
+                                <option value="paperback">Paperback with Spine</option>
+                                <option value="hardback">Hardback with Dust Jacket</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="style">Style</label>
+                            <select id="style" name="style" required>
+                                <option value="gradient">Gradient Background</option>
+                                <option value="solid">Solid Color</option>
+                                <option value="minimalist">Minimalist</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-title">Book Title</label>
+                        <input type="text" id="cover-title" name="title" placeholder="Enter book title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-subtitle">Subtitle (optional)</label>
+                        <input type="text" id="cover-subtitle" name="subtitle" placeholder="Enter subtitle">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-author">Author Name</label>
+                        <input type="text" id="cover-author" name="author" placeholder="Enter author name" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="primary-color">Primary Color</label>
+                            <input type="color" id="primary-color" name="primary_color" value="#667eea">
+                        </div>
+                        <div class="form-group">
+                            <label for="secondary-color">Secondary Color</label>
+                            <input type="color" id="secondary-color" name="secondary_color" value="#764ba2">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">Generate Cover</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetCoverForm()">Reset</button>
+                    </div>
+                </form>
+
+                <div id="cover-preview" class="preview-section" style="display: none;">
+                    <h3>Preview</h3>
+                    <div class="preview-container">
+                        <img id="preview-image" src="" alt="Cover Preview">
+                    </div>
+                    <button class="btn btn-primary" onclick="downloadCover()">Download Cover</button>
+                </div>
+            </div>
+
+            <!-- Convert Cover Tab -->
+            <div id="convert-tab" class="tool-tab-content">
+                <h2>Convert Cover Format</h2>
+                <p>Convert an existing cover image to Amazon KDP-compliant format.</p>
+
+                <form id="convert-cover-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Upload Cover Image</label>
+                        <div class="file-drop-zone" id="cover-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">🖼️</span>
+                                <p>Drag & drop cover image here or click to browse</p>
+                                <p class="file-info">Supports: PNG, JPG, JPEG</p>
+                            </div>
+                            <input type="file" id="cover-input" name="file" accept=".png,.jpg,.jpeg" style="display: none;">
+                        </div>
+                        <div id="cover-preview-upload" class="preview-container" style="display: none;">
+                            <img id="uploaded-cover-preview" src="" alt="Uploaded Cover">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="target-type">Convert To</label>
+                        <select id="target-type" name="type" required>
+                            <option value="ebook">E-Book Format (2560 x 1600 px)</option>
+                            <option value="paperback">Paperback with Spine</option>
+                            <option value="hardback">Hardback with Dust Jacket</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">Convert Cover</button>
+                    </div>
+                </form>
+
+                <div id="convert-results" class="results-section" style="display: none;">
+                    <h3>Conversion Complete</h3>
+                    <div id="convert-results-content"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tool-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+
+                document.querySelectorAll('.tool-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                document.querySelectorAll('.tool-tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(`${tab}-tab`).classList.add('active');
+            });
+        });
+
+        // Create cover form submission
+        document.getElementById('create-cover-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {
+                type: formData.get('type'),
+                title: formData.get('title'),
+                subtitle: formData.get('subtitle'),
+                author: formData.get('author'),
+                style: formData.get('style'),
+                colors: {
+                    primary: formData.get('primary_color'),
+                    secondary: formData.get('secondary_color')
+                }
+            };
+
+            try {
+                const response = await fetch('/api/create-cover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('cover-preview').style.display = 'block';
+                    document.getElementById('preview-image').src = '/api/download/' + result.file;
+                } else {
+                    alert('Error: ' + (result.error || 'Cover generation failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // Convert cover handling
+        const coverDropZone = document.getElementById('cover-drop-zone');
+        const coverInput = document.getElementById('cover-input');
+
+        coverDropZone.addEventListener('click', () => coverInput.click());
+
+        coverDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            coverDropZone.classList.add('drag-over');
+        });
+
+        coverDropZone.addEventListener('dragleave', () => {
+            coverDropZone.classList.remove('drag-over');
+        });
+
+        coverDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            coverDropZone.classList.remove('drag-over');
+            coverInput.files = e.dataTransfer.files;
+            previewUploadedCover();
+        });
+
+        coverInput.addEventListener('change', previewUploadedCover);
+
+        function previewUploadedCover() {
+            const file = coverInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('cover-preview-upload').style.display = 'block';
+                    document.getElementById('uploaded-cover-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Convert cover form submission
+        document.getElementById('convert-cover-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/api/convert-cover', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('convert-results').style.display = 'block';
+                    document.getElementById('convert-results-content').innerHTML = `
+                        <div class="success-message">
+                            <p>${result.message}</p>
+                        </div>
+                        <div class="download-item">
+                            <a href="/api/download/${result.file}" class="btn btn-primary" download>Download Converted Cover</a>
+                        </div>
+                    `;
+                } else {
+                    alert('Error: ' + (result.error || 'Cover conversion failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function resetCoverForm() {
+            document.getElementById('create-cover-form').reset();
+            document.getElementById('cover-preview').style.display = 'none';
+        }
+
+        function downloadCover() {
+            const imgSrc = document.getElementById('preview-image').src;
+            const link = document.createElement('a');
+            link.href = imgSrc;
+            link.download = 'book-cover.jpg';
+            link.click();
+        }
+    </script>
+</body>
+</html>

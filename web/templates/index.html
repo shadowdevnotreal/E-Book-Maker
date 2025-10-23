@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Book Maker - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Professional E-Book Creation Suite</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <main class="dashboard">
+            <div class="welcome-section">
+                <h2>Welcome to E-Book Maker</h2>
+                <p>Create professional e-books, design covers, and protect your work with watermarks - all in one place.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Document Conversion Card -->
+                <div class="card" onclick="location.href='/convert'">
+                    <div class="card-icon">📄</div>
+                    <h3>Convert Documents</h3>
+                    <p>Transform your markdown, text, or HTML files into professional EPUB, PDF, or HTML e-books.</p>
+                    <ul class="feature-list">
+                        <li>Markdown to EPUB/PDF/HTML</li>
+                        <li>Multi-chapter support</li>
+                        <li>Custom metadata</li>
+                        <li>Table of contents generation</li>
+                    </ul>
+                    <button class="btn btn-primary">Start Converting</button>
+                </div>
+
+                <!-- Cover Creation Card -->
+                <div class="card" onclick="location.href='/covers'">
+                    <div class="card-icon">🎨</div>
+                    <h3>Create Book Covers</h3>
+                    <p>Design professional e-book and paperback covers with custom graphics and text.</p>
+                    <ul class="feature-list">
+                        <li>E-book cover generator</li>
+                        <li>Paperback with spine</li>
+                        <li>Amazon KDP compliant</li>
+                        <li>Custom colors & fonts</li>
+                    </ul>
+                    <button class="btn btn-primary">Create Cover</button>
+                </div>
+
+                <!-- Watermarking Card -->
+                <div class="card" onclick="location.href='/watermark'">
+                    <div class="card-icon">💧</div>
+                    <h3>Add Watermark</h3>
+                    <p>Protect your documents with custom text or logo watermarks.</p>
+                    <ul class="feature-list">
+                        <li>Text & logo watermarks</li>
+                        <li>PDF, HTML, DOCX support</li>
+                        <li>Adjustable opacity</li>
+                        <li>Batch processing</li>
+                    </ul>
+                    <button class="btn btn-primary">Add Watermark</button>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="system-status">
+                <h3>System Status</h3>
+                <div id="dependency-status" class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Pandoc:</span>
+                        <span class="status-value" id="pandoc-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">wkhtmltopdf:</span>
+                        <span class="status-value" id="wkhtmltopdf-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">LaTeX:</span>
+                        <span class="status-value" id="latex-status">Checking...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Files -->
+            <div class="recent-files">
+                <h3>Recent Outputs</h3>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="ebooks">E-Books</button>
+                    <button class="tab-btn" data-tab="covers">Covers</button>
+                    <button class="tab-btn" data-tab="watermarked">Watermarked</button>
+                </div>
+                <div class="tab-content">
+                    <div id="ebooks-list" class="file-list active"></div>
+                    <div id="covers-list" class="file-list"></div>
+                    <div id="watermarked-list" class="file-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Check dependencies on load
+        checkDependencies();
+
+        // Load recent files
+        loadRecentFiles('ebooks');
+        loadRecentFiles('covers');
+        loadRecentFiles('watermarked');
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update active content
+                document.querySelectorAll('.file-list').forEach(list => list.classList.remove('active'));
+                document.getElementById(`${tab}-list`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
