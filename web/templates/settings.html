@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Settings & Configuration</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/settings" class="active">Settings</a>
+        </nav>
+
+        <main class="settings-page">
+            <h2>System Information</h2>
+
+            <div class="settings-section">
+                <h3>Dependencies Status</h3>
+                <div class="dependencies-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Status</th>
+                                <th>Purpose</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dependencies-tbody">
+                            <tr>
+                                <td>Pandoc</td>
+                                <td id="dep-pandoc">Checking...</td>
+                                <td>Document conversion</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>wkhtmltopdf</td>
+                                <td id="dep-wkhtmltopdf">Checking...</td>
+                                <td>PDF generation</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>LaTeX (pdflatex)</td>
+                                <td id="dep-latex">Checking...</td>
+                                <td>Advanced PDF formatting</td>
+                                <td>No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Installation Instructions</h3>
+
+                <details class="install-details">
+                    <summary>Windows Installation</summary>
+                    <div class="install-content">
+                        <h4>Pandoc</h4>
+                        <code>choco install pandoc</code>
+                        <p>Or download from: <a href="https://pandoc.org/installing.html" target="_blank">pandoc.org</a></p>
+
+                        <h4>wkhtmltopdf</h4>
+                        <code>choco install wkhtmltopdf</code>
+                        <p>Or download from: <a href="https://wkhtmltopdf.org/downloads.html" target="_blank">wkhtmltopdf.org</a></p>
+                    </div>
+                </details>
+
+                <details class="install-details">
+                    <summary>macOS Installation</summary>
+                    <div class="install-content">
+                        <h4>Pandoc</h4>
+                        <code>brew install pandoc</code>
+
+                        <h4>wkhtmltopdf</h4>
+                        <code>brew install wkhtmltopdf</code>
+
+                        <h4>LaTeX (Optional)</h4>
+                        <code>brew install --cask mactex</code>
+                    </div>
+                </details>
+
+                <details class="install-details">
+                    <summary>Linux Installation</summary>
+                    <div class="install-content">
+                        <h4>Ubuntu/Debian</h4>
+                        <code>sudo apt-get install pandoc wkhtmltopdf</code>
+
+                        <h4>Fedora</h4>
+                        <code>sudo dnf install pandoc wkhtmltopdf</code>
+
+                        <h4>Arch Linux</h4>
+                        <code>sudo pacman -S pandoc wkhtmltopdf</code>
+
+                        <h4>LaTeX (Optional, ~500MB)</h4>
+                        <code>sudo apt-get install texlive-latex-base texlive-fonts-recommended</code>
+                    </div>
+                </details>
+            </div>
+
+            <div class="settings-section">
+                <h3>About E-Book Maker</h3>
+                <p><strong>Version:</strong> 1.0.0</p>
+                <p><strong>Purpose:</strong> Professional e-book creation, cover design, and document protection</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Multi-format document conversion (EPUB, PDF, HTML)</li>
+                    <li>Professional cover generation and conversion</li>
+                    <li>Document watermarking with text and logos</li>
+                    <li>Cross-platform support (Windows, macOS, Linux)</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Check dependencies on load
+        checkDependenciesDetailed();
+
+        async function checkDependenciesDetailed() {
+            try {
+                const response = await fetch('/api/check-dependencies');
+                const data = await response.json();
+
+                updateDependencyStatus('dep-pandoc', data.dependencies.pandoc);
+                updateDependencyStatus('dep-wkhtmltopdf', data.dependencies.wkhtmltopdf);
+                updateDependencyStatus('dep-latex', data.dependencies.pdflatex);
+            } catch (error) {
+                console.error('Error checking dependencies:', error);
+            }
+        }
+
+        function updateDependencyStatus(elementId, installed) {
+            const element = document.getElementById(elementId);
+            if (installed) {
+                element.innerHTML = '<span class="status-installed">✓ Installed</span>';
+            } else {
+                element.innerHTML = '<span class="status-missing">✗ Not Found</span>';
+            }
+        }
+    </script>
+</body>
+</html>

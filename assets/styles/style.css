@@ -1,0 +1,239 @@
+/* CSS Style for "The Complete IT Career Readiness Pipeline" HTML version */
+
+/* Base styling */
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fafafa;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    color: #2c3e50;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2.5em;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.3em;
+    color: #2c3e50;
+}
+
+h2 {
+    font-size: 2em;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.2em;
+}
+
+h3 {
+    font-size: 1.5em;
+    color: #34495e;
+}
+
+h4 {
+    font-size: 1.3em;
+    color: #7f8c8d;
+}
+
+h5 {
+    font-size: 1.1em;
+    color: #95a5a6;
+}
+
+/* Table of Contents */
+#TOC {
+    background-color: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+#TOC ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+#TOC li {
+    margin: 5px 0;
+}
+
+#TOC a {
+    color: #2980b9;
+    text-decoration: none;
+}
+
+#TOC a:hover {
+    text-decoration: underline;
+}
+
+/* Paragraphs */
+p {
+    margin-bottom: 1em;
+    text-align: justify;
+}
+
+/* Emphasis */
+em {
+    font-style: italic;
+    color: #7f8c8d;
+}
+
+strong {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Lists */
+ul, ol {
+    margin-bottom: 1em;
+    padding-left: 30px;
+}
+
+li {
+    margin-bottom: 0.5em;
+}
+
+/* Code and preformatted text */
+code {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #e74c3c;
+}
+
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    overflow-x: auto;
+    margin: 15px 0;
+}
+
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #2c3e50;
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 4px solid #3498db;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    font-style: italic;
+    color: #7f8c8d;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+    background-color: white;
+}
+
+th, td {
+    border: 1px solid #bdc3c7;
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Special formatting for frameworks and methodologies */
+.framework-name {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Chapter and section breaks */
+.chapter-break {
+    page-break-before: always;
+    margin-top: 50px;
+    border-top: 3px solid #3498db;
+    padding-top: 30px;
+}
+
+/* Checklists and action items */
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Links */
+a {
+    color: #2980b9;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #3498db;
+}
+
+/* Print styles */
+@media print {
+    body {
+        background-color: white;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .chapter-break {
+        page-break-before: always;
+    }
+
+    h1, h2 {
+        page-break-after: avoid;
+    }
+
+    blockquote, pre, table {
+        page-break-inside: avoid;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    h2 {
+        font-size: 1.7em;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}

@@ -1,0 +1,37 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5000,
+    "debug": false
+  },
+  "conversion": {
+    "default_formats": ["epub", "pdf"],
+    "normalize_text": true,
+    "include_toc": true,
+    "toc_depth": 3
+  },
+  "covers": {
+    "ebook_width": 2560,
+    "ebook_height": 1600,
+    "paperback_width": 5499,
+    "paperback_height": 3375,
+    "dpi": 300,
+    "quality": 95,
+    "default_style": "gradient",
+    "default_colors": {
+      "primary": "#667eea",
+      "secondary": "#764ba2"
+    }
+  },
+  "watermarking": {
+    "default_opacity": 0.1,
+    "default_position": "center",
+    "default_text": "© 2025 Watermarked Document. All Rights Reserved."
+  },
+  "paths": {
+    "output": "output",
+    "uploads": "output/uploads",
+    "assets": "assets",
+    "logos": "assets/logos"
+  }
+}
