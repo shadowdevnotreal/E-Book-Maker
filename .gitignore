@@ -1,0 +1,100 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Flask
+instance/
+.webassets-cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+temp_*
+.setup_state
+
+# Output directories - keep structure, ignore generated content
+output/ebooks/*
+output/covers/*
+output/watermarked/*
+!output/ebooks/.gitkeep
+!output/covers/.gitkeep
+!output/watermarked/.gitkeep
+
+# Test results - keep for documentation purposes
+# output/test_results/
+
+# Sample files - keep for testing
+# output/sample_files/
+
+# Uploads (temporary user uploads)
+output/uploads/*
+!output/uploads/.gitkeep
+
+# User content - work in progress (exclude from git)
+chapters/*
+!chapters/README.md
+appendices/*
+!appendices/README.md
+drafts/*
+!drafts/README.md
+
+# User assets (exclude from git)
+assets/images/*
+!assets/images/README.md
+assets/logos/*
+!assets/logos/README.md
+
+# Configuration
+config/user_config.json
+config/*.secret
+config/*.local
+
+# GitHub preparation files (temporary)
+GITHUB_READY.md
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+
+# Watermark metadata
+.watermark.json
+*.watermark.json
+
+# Claude Code configuration (optional)
+# .claude/
+# Auto-added by fresh push fresh-20251025-183956
+setup/
+*.exe
+*.msi
+*.zip

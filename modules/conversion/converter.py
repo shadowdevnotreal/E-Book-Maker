@@ -1,0 +1,385 @@
+"""
+E-Book Converter Module
+Converts markdown/text/HTML to EPUB, PDF, and HTML using Pandoc
+Consolidated from IT-Career-Blueprint-EBook pandoc tools
+"""
+
+import os
+import subprocess
+import shutil
+from pathlib import Path
+from datetime import datetime
+from typing import List, Dict, Optional
+from .text_normalizer import TextNormalizer
+
+
+class EBookConverter:
+    """Main e-book conversion class"""
+
+    def __init__(self):
+        self.text_normalizer = TextNormalizer()
+        self.supported_formats = ['epub', 'pdf', 'html', 'docx', 'md']
+        self.pdf_engines = ['wkhtmltopdf', 'pdflatex', 'weasyprint']
+
+    def check_dependencies(self) -> Dict[str, bool]:
+        """Check if required tools are installed"""
+        dependencies = {
+            'pandoc': shutil.which('pandoc') is not None,
+            'wkhtmltopdf': shutil.which('wkhtmltopdf') is not None,
+            'pdflatex': shutil.which('pdflatex') is not None,
+            'weasyprint': shutil.which('weasyprint') is not None
+        }
+        return dependencies
+
+    def get_available_pdf_engine(self) -> Optional[str]:
+        """Get the first available PDF engine"""
+        for engine in self.pdf_engines:
+            if shutil.which(engine):
+                return engine
+        return None
+
+    def combine_files(self, input_files: List[Path]) -> str:
+        """Combine multiple input files into one content"""
+        # Check if files are binary formats that need Pandoc to read
+        binary_formats = {'.docx', '.epub', '.odt'}
+        has_binary = any(f.suffix.lower() in binary_formats for f in input_files)
+
+        if has_binary:
+            # For binary files, use Pandoc to convert to markdown first
+            return self._combine_binary_files(input_files)
+
+        # For text files, read directly
+        combined_content = []
+        for file_path in input_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    combined_content.append(content)
+                    combined_content.append('\n\n')  # Add spacing between files
+            except Exception as e:
+                print(f"Warning: Could not read {file_path}: {e}")
+
+        return '\n'.join(combined_content)
+
+    def _combine_binary_files(self, input_files: List[Path]) -> str:
+        """Convert binary files to markdown and combine them"""
+        combined_content = []
+
+        for file_path in input_files:
+            try:
+                # Use Pandoc to convert to markdown
+                result = subprocess.run(
+                    ['pandoc', str(file_path), '-t', 'markdown'],
+                    capture_output=True,
+                    text=True
+                )
+
+                if result.returncode == 0:
+                    combined_content.append(result.stdout)
+                    combined_content.append('\n\n')
+                else:
+                    print(f"Warning: Could not convert {file_path}: {result.stderr}")
+            except Exception as e:
+                print(f"Warning: Error processing {file_path}: {e}")
+
+        return '\n'.join(combined_content)
+
+    def normalize_content(self, content: str) -> str:
+        """Normalize text encoding and formatting"""
+        return self.text_normalizer.normalize_text(content)
+
+    def create_metadata(self, title: str, author: str, subtitle: str = '') -> str:
+        """Create YAML front matter for pandoc"""
+        metadata = [
+            '---',
+            f'title: "{title}"',
+            f'author: "{author}"',
+        ]
+
+        if subtitle:
+            metadata.append(f'subtitle: "{subtitle}"')
+
+        metadata.extend([
+            f'date: "{datetime.now().strftime("%Y-%m-%d")}"',
+            'toc: true',
+            'toc-depth: 3',
+            '---',
+            ''
+        ])
+
+        return '\n'.join(metadata)
+
+    def convert_to_epub(self, content: str, output_path: Path, title: str, author: str) -> bool:
+        """Convert content to EPUB format"""
+        try:
+            # Create temporary file with content
+            temp_file = output_path.parent / f'temp_{output_path.stem}.md'
+
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            # Run pandoc
+            cmd = [
+                'pandoc',
+                str(temp_file),
+                '-o', str(output_path),
+                '--toc',
+                '--toc-depth=3',
+                f'--metadata=title:{title}',
+                f'--metadata=author:{author}',
+                '--epub-cover-image=' if False else '',  # TODO: Add cover support
+            ]
+
+            # Remove empty arguments
+            cmd = [arg for arg in cmd if arg]
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            # Clean up temp file
+            if temp_file.exists():
+                temp_file.unlink()
+
+            if result.returncode == 0:
+                return True
+            else:
+                print(f"EPUB conversion error: {result.stderr}")
+                return False
+
+        except Exception as e:
+            print(f"Error converting to EPUB: {e}")
+            return False
+
+    def convert_to_pdf(self, content: str, output_path: Path, title: str, author: str) -> bool:
+        """Convert content to PDF format"""
+        try:
+            # Get available PDF engine
+            pdf_engine = self.get_available_pdf_engine()
+
+            if not pdf_engine and not shutil.which('pandoc'):
+                print("No PDF engine available. Install wkhtmltopdf, pdflatex, or weasyprint.")
+                return False
+
+            # Create temporary file with content
+            temp_file = output_path.parent / f'temp_{output_path.stem}.md'
+
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            # Run pandoc with PDF engine
+            cmd = [
+                'pandoc',
+                str(temp_file),
+                '-o', str(output_path),
+                '--toc',
+                '--toc-depth=3',
+                f'--metadata=title:{title}',
+                f'--metadata=author:{author}',
+            ]
+
+            # Add PDF engine if available
+            if pdf_engine == 'wkhtmltopdf':
+                cmd.extend(['--pdf-engine=wkhtmltopdf'])
+            elif pdf_engine == 'pdflatex':
+                cmd.extend(['--pdf-engine=pdflatex'])
+            elif pdf_engine == 'weasyprint':
+                cmd.extend(['--pdf-engine=weasyprint'])
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            # Clean up temp file
+            if temp_file.exists():
+                temp_file.unlink()
+
+            if result.returncode == 0:
+                return True
+            else:
+                print(f"PDF conversion error: {result.stderr}")
+                return False
+
+        except Exception as e:
+            print(f"Error converting to PDF: {e}")
+            return False
+
+    def convert_to_html(self, content: str, output_path: Path, title: str, author: str,
+                       css_file: Optional[Path] = None) -> bool:
+        """Convert content to HTML format"""
+        try:
+            # Create temporary file with content
+            temp_file = output_path.parent / f'temp_{output_path.stem}.md'
+
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            # Run pandoc
+            cmd = [
+                'pandoc',
+                str(temp_file),
+                '-o', str(output_path),
+                '--standalone',
+                '--toc',
+                '--toc-depth=3',
+                f'--metadata=title:{title}',
+                f'--metadata=author:{author}',
+                '--self-contained',
+            ]
+
+            # Add CSS if provided
+            if css_file and css_file.exists():
+                cmd.extend(['--css', str(css_file)])
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            # Clean up temp file
+            if temp_file.exists():
+                temp_file.unlink()
+
+            if result.returncode == 0:
+                return True
+            else:
+                print(f"HTML conversion error: {result.stderr}")
+                return False
+
+        except Exception as e:
+            print(f"Error converting to HTML: {e}")
+            return False
+
+    def convert_to_docx(self, content: str, output_path: Path, title: str, author: str) -> bool:
+        """Convert content to DOCX format"""
+        try:
+            # Create temporary file with content
+            temp_file = output_path.parent / f'temp_{output_path.stem}.md'
+
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+
+            # Run pandoc
+            cmd = [
+                'pandoc',
+                str(temp_file),
+                '-o', str(output_path),
+                '--toc',
+                '--toc-depth=3',
+                f'--metadata=title:{title}',
+                f'--metadata=author:{author}',
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+
+            # Clean up temp file
+            if temp_file.exists():
+                temp_file.unlink()
+
+            if result.returncode == 0:
+                return True
+            else:
+                print(f"DOCX conversion error: {result.stderr}")
+                return False
+
+        except Exception as e:
+            print(f"Error converting to DOCX: {e}")
+            return False
+
+    def convert_to_md(self, content: str, output_path: Path, title: str, author: str) -> bool:
+        """Convert content to Markdown format"""
+        try:
+            # For MD output, we can just write the content with metadata
+            # Or use pandoc to normalize the markdown
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return True
+
+        except Exception as e:
+            print(f"Error converting to Markdown: {e}")
+            return False
+
+    def convert(self, input_files: List[Path], output_formats: List[str],
+                title: str, author: str, subtitle: str = '',
+                output_dir: Path = None, normalize_text: bool = True,
+                css_file: Optional[Path] = None) -> List[Dict[str, str]]:
+        """
+        Main conversion method
+
+        Args:
+            input_files: List of input file paths
+            output_formats: List of output formats (epub, pdf, html)
+            title: Book title
+            author: Author name
+            subtitle: Book subtitle (optional)
+            output_dir: Output directory
+            normalize_text: Whether to normalize text encoding
+            css_file: CSS file for HTML output
+
+        Returns:
+            List of dictionaries with file information
+        """
+        # Check dependencies
+        deps = self.check_dependencies()
+        if not deps['pandoc']:
+            raise Exception("Pandoc is not installed. Please install pandoc to continue.")
+
+        # Combine input files
+        content = self.combine_files(input_files)
+
+        # Normalize text if requested
+        if normalize_text:
+            content = self.normalize_content(content)
+
+        # Add metadata
+        metadata = self.create_metadata(title, author, subtitle)
+        full_content = metadata + '\n\n' + content
+
+        # Ensure output directory exists
+        if output_dir is None:
+            output_dir = Path.cwd() / 'output'
+
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Convert to requested formats
+        results = []
+        base_filename = title.lower().replace(' ', '-').replace('_', '-')
+
+        for fmt in output_formats:
+            if fmt not in self.supported_formats:
+                print(f"Warning: Unsupported format '{fmt}'. Skipping.")
+                continue
+
+            output_path = output_dir / f'{base_filename}.{fmt}'
+
+            print(f"Converting to {fmt.upper()}...")
+
+            success = False
+            if fmt == 'epub':
+                success = self.convert_to_epub(full_content, output_path, title, author)
+            elif fmt == 'pdf':
+                success = self.convert_to_pdf(full_content, output_path, title, author)
+            elif fmt == 'html':
+                success = self.convert_to_html(full_content, output_path, title, author, css_file)
+            elif fmt == 'docx':
+                success = self.convert_to_docx(full_content, output_path, title, author)
+            elif fmt == 'md':
+                success = self.convert_to_md(full_content, output_path, title, author)
+
+            if success and output_path.exists():
+                results.append({
+                    'name': output_path.name,
+                    'path': str(output_path.relative_to(output_dir.parent)),
+                    'size': output_path.stat().st_size,
+                    'format': fmt
+                })
+                print(f"✓ {fmt.upper()} created: {output_path}")
+            else:
+                print(f"✗ {fmt.upper()} conversion failed")
+
+        return results
+
+
+if __name__ == '__main__':
+    # Test the converter
+    converter = EBookConverter()
+    deps = converter.check_dependencies()
+
+    print("Dependency Check:")
+    for dep, installed in deps.items():
+        status = "✓" if installed else "✗"
+        print(f"  {status} {dep}")
