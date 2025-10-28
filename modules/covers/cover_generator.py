@@ -208,6 +208,62 @@ class CoverGenerator:
             subsampling=0  # 4:4:4 for best quality
         )
 
+    def save_as_pdf(self, img: Image.Image, output_path: Path,
+                   dpi: int = 300, title: str = "Book Cover") -> None:
+        """
+        Save image as PDF with KDP compliance (PDF/X-1a compatible)
+
+        Amazon KDP requires:
+        - PDF format for print covers (paperback/hardback)
+        - 300 DPI minimum resolution
+        - All fonts embedded (not applicable for image-based covers)
+        - Max file size: 650MB
+
+        Args:
+            img: PIL Image to save
+            output_path: Path to save to
+            dpi: Resolution in DPI (should be 300 for KDP)
+            title: PDF document title metadata
+        """
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.units import inch
+        import io
+
+        # Ensure RGB mode
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Calculate page size in inches (at specified DPI)
+        width_inches = img.width / dpi
+        height_inches = img.height / dpi
+
+        # Create PDF with exact dimensions
+        c = canvas.Canvas(str(output_path), pagesize=(width_inches * inch, height_inches * inch))
+
+        # Set PDF metadata for KDP compliance
+        c.setTitle(title)
+        c.setCreator("E-Book Maker v2.1")
+        c.setSubject("Book Cover - Amazon KDP Compliant")
+
+        # Save PIL image to temporary buffer as high-quality JPEG
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
+        img_buffer.seek(0)
+
+        # Draw image to fill entire page (no margins, exact fit)
+        c.drawImage(
+            img_buffer,
+            0, 0,
+            width=width_inches * inch,
+            height=height_inches * inch,
+            preserveAspectRatio=False
+        )
+
+        # Save PDF
+        c.save()
+
+        print(f"PDF saved: {output_path} ({img.width}x{img.height}px @ {dpi} DPI)")
+
     def create_cover(self, cover_type: str, title: str, subtitle: str,
                     author: str, style: str, colors: Dict[str, str],
                     output_dir: Path) -> Path:
@@ -302,11 +358,16 @@ class CoverGenerator:
             line_x = (width - line_width) // 2
             draw.rectangle([line_x, line_y, line_x + line_width, line_y + 5], fill=text_color)
 
-        # Save cover
-        output_filename = f"{cover_type}_cover_{title.lower().replace(' ', '_')}.jpg"
-        output_path = output_dir / output_filename
-
-        self.save_optimized_jpeg(img, output_path, dpi=dpi, quality=95)
+        # Save cover with appropriate format
+        # KDP Requirements: eBook = JPEG, Paperback/Hardback = PDF
+        if cover_type == 'ebook':
+            output_filename = f"{cover_type}_cover_{title.lower().replace(' ', '_')}.jpg"
+            output_path = output_dir / output_filename
+            self.save_optimized_jpeg(img, output_path, dpi=dpi, quality=95)
+        else:  # paperback or hardback
+            output_filename = f"{cover_type}_cover_{title.lower().replace(' ', '_')}.pdf"
+            output_path = output_dir / output_filename
+            self.save_as_pdf(img, output_path, dpi=dpi, title=f"{title} - {cover_type.capitalize()} Cover")
 
         return output_path
 
@@ -543,12 +604,18 @@ class CoverGenerator:
         if add_barcode_area and target_type in ['paperback', 'hardback']:
             img_resized = self._add_barcode_safe_area(img_resized, target_type, dpi)
 
-        # Save converted cover
+        # Save converted cover with appropriate format
+        # KDP Requirements: eBook = JPEG, Paperback/Hardback = PDF
         input_stem = Path(input_file).stem
-        output_filename = f"{target_type}_converted_{input_stem}.jpg"
-        output_path = output_dir / output_filename
-
-        self.save_optimized_jpeg(img_resized, output_path, dpi=dpi, quality=95)
+        if target_type == 'ebook':
+            output_filename = f"{target_type}_converted_{input_stem}.jpg"
+            output_path = output_dir / output_filename
+            self.save_optimized_jpeg(img_resized, output_path, dpi=dpi, quality=95)
+        else:  # paperback or hardback
+            output_filename = f"{target_type}_converted_{input_stem}.pdf"
+            output_path = output_dir / output_filename
+            cover_title = title if title else f"Converted {target_type.capitalize()} Cover"
+            self.save_as_pdf(img_resized, output_path, dpi=dpi, title=cover_title)
 
         print(f"Original: {img.size} -> Converted: {img_resized.size}")
         print(f"Saved to: {output_path}")

@@ -5,7 +5,10 @@ E-Book and Paperback versions
 """
 
 from PIL import Image, ImageDraw, ImageFont
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 import os
+import io
 
 def create_ebook_cover():
     """Create e-book cover (1600 x 2560 px - portrait)"""
@@ -84,6 +87,51 @@ def create_ebook_cover():
     draw.rectangle([(line_x1, line_y), (line_x2, line_y + 4)], fill='white')
 
     return img
+
+def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover"):
+    """
+    Save PIL Image as PDF with KDP compliance
+
+    Amazon KDP requires PDF format for print covers (paperback/hardback)
+
+    Args:
+        img: PIL Image object
+        output_path: Path to save PDF
+        dpi: Resolution in DPI (300 for KDP)
+        title: PDF document title
+    """
+    # Ensure RGB mode
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # Calculate page size in inches (at specified DPI)
+    width_inches = img.width / dpi
+    height_inches = img.height / dpi
+
+    # Create PDF with exact dimensions
+    c = canvas.Canvas(output_path, pagesize=(width_inches * inch, height_inches * inch))
+
+    # Set PDF metadata for KDP compliance
+    c.setTitle(title)
+    c.setCreator("E-Book Maker v2.1")
+    c.setSubject("Book Cover - Amazon KDP Compliant")
+
+    # Save PIL image to temporary buffer as high-quality JPEG
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
+    img_buffer.seek(0)
+
+    # Draw image to fill entire page (no margins, exact fit)
+    c.drawImage(
+        img_buffer,
+        0, 0,
+        width=width_inches * inch,
+        height=height_inches * inch,
+        preserveAspectRatio=False
+    )
+
+    # Save PDF
+    c.save()
 
 def calculate_spine_width(page_count, paper_type='white', binding_type='paperback'):
     """
@@ -291,10 +339,12 @@ def main():
     spine_width_inches = calculate_spine_width(page_count, paper_type, 'paperback')
     spine_width_px = int(spine_width_inches * 300)
 
-    paperback_path = os.path.join(output_dir, "paperback_cover.jpg")
-    paperback_cover.save(paperback_path, "JPEG", quality=95, dpi=(300, 300))
+    # KDP requires PDF format for print covers
+    paperback_path = os.path.join(output_dir, "paperback_cover.pdf")
+    save_cover_as_pdf(paperback_cover, paperback_path, dpi=300, title="IT Career Blueprint - Paperback Cover")
     print(f"✅ Paperback cover saved: {paperback_path}")
-    print(f"   Size: {paperback_cover.size[0]} x {paperback_cover.size[1]} px")
+    print(f"   Format: PDF (KDP-compliant)")
+    print(f"   Size: {paperback_cover.size[0]} x {paperback_cover.size[1]} px @ 300 DPI")
     print(f"   Layout: Back (1800px) + Spine ({spine_width_px}px / {spine_width_inches:.4f}in) + Front (1800px)")
     print(f"   Spine calculation: {page_count} pages × 0.0025 in/page = {spine_width_inches:.4f} inches")
     print()
@@ -304,10 +354,10 @@ def main():
     print("="*60)
     print()
     print("Files created:")
-    print(f"  1. ebook_cover.jpg (for Kindle/E-book)")
-    print(f"  2. paperback_cover.jpg (for Print book)")
+    print(f"  1. ebook_cover.jpg (JPEG format for Kindle/E-book)")
+    print(f"  2. paperback_cover.pdf (PDF format for Print book - KDP required)")
     print()
-    print("Ready to upload to Amazon KDP!")
+    print("✅ Both covers are Amazon KDP compliant and ready to upload!")
     print()
 
 if __name__ == '__main__':

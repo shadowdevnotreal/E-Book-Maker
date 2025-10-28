@@ -5,7 +5,10 @@ Expected: 18.329 x 11.250 inches at 300 DPI
 """
 
 from PIL import Image
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 import os
+import io
 
 def create_paperback_cover():
     """Create paperback cover with Amazon's expected dimensions"""
@@ -96,14 +99,33 @@ def create_paperback_cover():
     # Spine - keep simple white or very subtle
     # (Amazon will check that text doesn't go into spine safe zones)
 
-    output_file = "IT-Career-Blueprint-Paperback.jpg"
-    paperback.save(output_file, "JPEG", quality=95, dpi=(dpi, dpi))
+    # Amazon KDP requires PDF format for print covers
+    output_file = "IT-Career-Blueprint-Paperback.pdf"
+
+    # Ensure RGB mode
+    if paperback.mode != 'RGB':
+        paperback = paperback.convert('RGB')
+
+    # Create PDF with exact dimensions
+    c = canvas.Canvas(output_file, pagesize=(width_inches * inch, height_inches * inch))
+    c.setTitle("IT Career Blueprint - Paperback Cover")
+    c.setCreator("E-Book Maker v2.1")
+    c.setSubject("Book Cover - Amazon KDP Compliant")
+
+    # Save PIL image to buffer as high-quality JPEG
+    img_buffer = io.BytesIO()
+    paperback.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
+    img_buffer.seek(0)
+
+    # Draw image to fill entire page
+    c.drawImage(img_buffer, 0, 0, width=width_inches * inch, height=height_inches * inch, preserveAspectRatio=False)
+    c.save()
 
     file_size = os.path.getsize(output_file) / 1024
 
     print("✅ Paperback cover created!")
     print()
-    print(f"Output: {output_file}")
+    print(f"Output: {output_file} (PDF format - KDP required)")
     print(f"Dimensions: {paperback.size} pixels")
     print(f"Size: {width_inches} x {height_inches} inches")
     print(f"Resolution: {dpi} DPI")

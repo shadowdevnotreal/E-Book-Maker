@@ -53,16 +53,16 @@
             <!-- Create Cover Tab -->
             <div id="create-tab" class="tool-tab-content active">
                 <h2>Create Book Cover</h2>
-                <p>Design a professional book cover from scratch with custom text and styling.</p>
+                <p>Design a professional book cover from scratch with custom text and styling. Amazon KDP requires different formats: <strong>JPEG for ebooks</strong>, <strong>PDF for print books</strong>.</p>
 
                 <form id="create-cover-form">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="cover-type">Cover Type</label>
                             <select id="cover-type" name="type" required>
-                                <option value="ebook">E-Book (2560 x 1600 px)</option>
-                                <option value="paperback">Paperback with Spine</option>
-                                <option value="hardback">Hardback with Dust Jacket</option>
+                                <option value="ebook">E-Book (2560 x 1600 px) → JPEG</option>
+                                <option value="paperback">Paperback with Spine → PDF</option>
+                                <option value="hardback">Hardback with Dust Jacket → PDF</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -152,7 +152,7 @@
             <!-- Convert Cover Tab -->
             <div id="convert-tab" class="tool-tab-content">
                 <h2>Convert Cover Format</h2>
-                <p>Convert an existing cover image to Amazon KDP-compliant format.</p>
+                <p>Convert an existing cover image to Amazon KDP-compliant format. Output: <strong>JPEG for ebooks</strong>, <strong>PDF for print books</strong>.</p>
 
                 <form id="convert-cover-form" enctype="multipart/form-data">
                     <div class="form-group">
@@ -173,9 +173,9 @@
                     <div class="form-group">
                         <label for="target-type">Convert To</label>
                         <select id="target-type" name="type" required>
-                            <option value="ebook">E-Book Format (2560 x 1600 px)</option>
-                            <option value="paperback">Paperback with Spine</option>
-                            <option value="hardback">Hardback with Dust Jacket</option>
+                            <option value="ebook">E-Book Format (2560 x 1600 px) → JPEG</option>
+                            <option value="paperback">Paperback with Spine → PDF</option>
+                            <option value="hardback">Hardback with Dust Jacket → PDF</option>
                         </select>
                     </div>
 

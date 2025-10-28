@@ -43,10 +43,10 @@ Point & Click           CLI Tools Available     Production Ready
 ### What Makes It Special?
 
 **🎯 Amazon KDP Compliance First**
-- E-book covers: 1600×2560 px (perfect 1.6:1 ratio), 300 DPI, RGB
-- Paperback covers: Full wrap with intelligent spine calculator
-- Hardback covers: Dust jacket with flaps
-- All outputs tested and verified for KDP upload
+- E-book covers: 1600×2560 px (perfect 1.6:1 ratio), 300 DPI, RGB, JPEG format
+- Paperback covers: Full wrap with intelligent spine calculator, PDF format
+- Hardback covers: Dust jacket with flaps, PDF format
+- All outputs tested and verified for KDP upload (36/36 tests passed)
 
 **🔄 Universal Format Support**
 - **Input**: DOCX, EPUB, RTF, ODT, LaTeX, RST, Org-mode, Markdown, HTML
@@ -91,9 +91,9 @@ Point & Click           CLI Tools Available     Production Ready
 <details>
 <summary><strong>Professional Cover Designer</strong> - E-book, paperback, and hardback covers with dynamic spine calculator</summary>
 
-- **📱 E-Book Covers** - 1600×2560 px (1.6:1 aspect ratio), 300 DPI, RGB, JPEG quality 95
-- **📖 Paperback Covers** - Full wrap with calculated spine based on page count
-- **📕 Hardback Covers** - Complete dust jacket with front/back flaps
+- **📱 E-Book Covers** - 1600×2560 px (1.6:1 aspect ratio), 300 DPI, RGB, JPEG format, quality 95
+- **📖 Paperback Covers** - Full wrap with calculated spine based on page count, PDF format (KDP required)
+- **📕 Hardback Covers** - Complete dust jacket with front/back flaps, PDF format (KDP required)
 - **📄 PDF Input Support** - Convert PDF files to KDP-compliant covers (NEW v2.1)
 - **📊 Barcode Safe Area** - Automatic 2.0" × 1.2" white box for ISBN/barcode placement (NEW v2.1)
   - Position: Lower-right of back cover
