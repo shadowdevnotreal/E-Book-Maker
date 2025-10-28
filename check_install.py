@@ -14,6 +14,7 @@ def check_python_packages():
         'PyPDF2': 'PyPDF2',
         'reportlab': 'reportlab',
         'docx': 'python-docx',
+        'fitz': 'PyMuPDF',
     }
 
     missing = []

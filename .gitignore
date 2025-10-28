@@ -12,6 +12,7 @@ ENV/
 dist/
 build/
 *.egg
+*.pyc
 
 # Flask
 instance/
@@ -37,6 +38,8 @@ desktop.ini
 *.temp
 temp_*
 .setup_state
+*_converted_*.jpg
+*_converted_*.pdf
 
 # Output directories - keep structure, ignore generated content
 output/ebooks/*

@@ -34,10 +34,11 @@ These are **automatically installed** by `start.bat` / `start.sh`:
 | **Pillow** | ≥10.0.0 | Image processing for covers |
 | **PyPDF2** | ≥3.0.0 | PDF reading/writing |
 | **reportlab** | ≥4.0.0 | PDF watermark generation |
-| **python-docx** | ≥0.8.11 | **DOCX watermarking** (NEW!) |
+| **python-docx** | ≥0.8.11 | DOCX watermarking & page numbering |
+| **PyMuPDF** | ≥1.23.0 | **PDF cover input support** (NEW v2.1!) |
 | **Werkzeug** | ≥2.3.0 | HTTP utilities |
 
-**Total:** 6 packages
+**Total:** 7 packages
 
 ---
 
@@ -84,6 +85,7 @@ Should show:
 ✓ PyPDF2
 ✓ reportlab
 ✓ python-docx
+✓ PyMuPDF
 ```
 
 ### Check System Tools

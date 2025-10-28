@@ -10,8 +10,11 @@ Pillow>=10.0.0
 PyPDF2>=3.0.0
 reportlab>=4.0.0
 
-# DOCX Processing (for Word document watermarking)
+# DOCX Processing (for Word document watermarking and page numbering)
 python-docx>=0.8.11
+
+# PDF Utilities (for PDF cover input and processing)
+PyMuPDF>=1.23.0
 
 # Additional utilities
 Werkzeug>=2.3.0
