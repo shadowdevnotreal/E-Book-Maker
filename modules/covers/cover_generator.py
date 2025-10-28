@@ -14,6 +14,12 @@ from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 import fitz  # PyMuPDF for PDF support
+import sys
+import os
+
+# Add parent directory to path for module imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from kdp_calculator import KDPCalculator
 
 
 class CoverGenerator:
@@ -66,6 +72,8 @@ class CoverGenerator:
         """
         Calculate spine width based on Amazon KDP specifications
 
+        Uses centralized KDP calculator module for consistent calculations.
+
         Args:
             page_count: Number of pages in the book
             paper_type: 'white', 'cream', or 'color'
@@ -74,16 +82,8 @@ class CoverGenerator:
         Returns:
             Spine width in inches
         """
-        # KDP spine width calculations (inches per page)
-        # Source: https://kdp.amazon.com/en_US/help/topic/G201834180
-        paper_thickness = {
-            'white': 0.0025,      # White paper: 0.0025" per page
-            'cream': 0.0027,      # Cream paper: 0.0027" per page
-            'color': 0.0025,      # Color paper: 0.0025" per page
-        }
-
-        thickness_per_page = paper_thickness.get(paper_type.lower(), 0.0025)
-        spine_width = page_count * thickness_per_page
+        # Use centralized KDP calculator
+        spine_width = KDPCalculator.calculate_spine_width(page_count, paper_type)
 
         # Hardcover boards add thickness
         if binding_type == 'hardcover':
@@ -209,13 +209,14 @@ class CoverGenerator:
         )
 
     def save_as_pdf(self, img: Image.Image, output_path: Path,
-                   dpi: int = 300, title: str = "Book Cover") -> None:
+                   dpi: int = 300, title: str = "Book Cover", use_cmyk: bool = True) -> None:
         """
         Save image as PDF with KDP compliance (PDF/X-1a compatible)
 
-        Amazon KDP requires:
-        - PDF format for print covers (paperback/hardback)
+        Amazon KDP requirements for print covers:
+        - PDF format (paperback/hardback)
         - 300 DPI minimum resolution
+        - CMYK color mode for print quality (KDP recommendation)
         - All fonts embedded (not applicable for image-based covers)
         - Max file size: 650MB
 
@@ -224,15 +225,29 @@ class CoverGenerator:
             output_path: Path to save to
             dpi: Resolution in DPI (should be 300 for KDP)
             title: PDF document title metadata
+            use_cmyk: Convert to CMYK for print (default: True)
+
+        Note:
+            Amazon KDP accepts RGB images and converts to CMYK during printing.
+            However, pre-converting to CMYK ensures better color accuracy.
         """
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
         from reportlab.lib.utils import ImageReader
         import io
 
-        # Ensure RGB mode
-        if img.mode != 'RGB':
+        # Ensure RGB mode first (required for consistent conversion)
+        if img.mode not in ('RGB', 'CMYK'):
             img = img.convert('RGB')
+
+        # Convert to CMYK for print quality (KDP recommendation)
+        if use_cmyk and img.mode != 'CMYK':
+            # Convert RGB to CMYK for professional printing
+            # Note: Amazon KDP will also apply their own color management
+            img = img.convert('CMYK')
+            print(f"  Color mode: CMYK (print-optimized)")
+        elif img.mode == 'RGB':
+            print(f"  Color mode: RGB (will be converted by KDP)")
 
         # Calculate page size in inches (at specified DPI)
         width_inches = img.width / dpi
@@ -244,10 +259,11 @@ class CoverGenerator:
         # Set PDF metadata for KDP compliance
         c.setTitle(title)
         c.setCreator("E-Book Maker v2.1")
-        c.setSubject("Book Cover - Amazon KDP Compliant")
+        c.setSubject("Book Cover - Amazon KDP Compliant - Print Ready")
 
         # Save PIL image to temporary buffer as high-quality JPEG
         img_buffer = io.BytesIO()
+        # JPEG format supports both RGB and CMYK
         img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
         img_buffer.seek(0)
 
@@ -266,7 +282,8 @@ class CoverGenerator:
         # Save PDF
         c.save()
 
-        print(f"PDF saved: {output_path} ({img.width}x{img.height}px @ {dpi} DPI)")
+        color_mode = "CMYK" if use_cmyk else "RGB"
+        print(f"PDF saved: {output_path} ({img.width}x{img.height}px @ {dpi} DPI, {color_mode})")
 
     def create_cover(self, cover_type: str, title: str, subtitle: str,
                     author: str, style: str, colors: Dict[str, str],
@@ -800,7 +817,8 @@ class CoverGenerator:
         Amazon KDP requirements:
         - White box: 2.0" × 1.2" (600 × 360 pixels at 300 DPI)
         - Position: Lower-right of back cover
-        - Clear space: 0.25" from trim edges and spine (75 pixels at 300 DPI)
+        - Paperback clearance: 0.25" from trim edges and spine
+        - Hardcover clearance: 0.76" from bottom, 0.25" from spine hinge
 
         Args:
             img: Cover image
@@ -819,7 +837,16 @@ class CoverGenerator:
         # Calculate dimensions in pixels
         barcode_width = int(2.0 * dpi)   # 2.0 inches = 600 pixels at 300 DPI
         barcode_height = int(1.2 * dpi)  # 1.2 inches = 360 pixels at 300 DPI
-        clearance = int(0.25 * dpi)      # 0.25 inches = 75 pixels at 300 DPI
+
+        # KDP clearance requirements differ by cover type
+        if cover_type == 'hardback':
+            # Hardcover: 0.76" from bottom, 0.25" from spine (KDP requirement)
+            clearance_bottom = int(0.76 * dpi)  # 0.76 inches = 228 pixels at 300 DPI
+            clearance_side = int(0.25 * dpi)    # 0.25 inches = 75 pixels at 300 DPI
+        else:  # paperback
+            # Paperback: 0.25" from all edges (standard practice)
+            clearance_bottom = int(0.25 * dpi)  # 0.25 inches = 75 pixels at 300 DPI
+            clearance_side = int(0.25 * dpi)    # 0.25 inches = 75 pixels at 300 DPI
 
         # Determine back cover position
         if cover_type == 'paperback':
@@ -835,11 +862,11 @@ class CoverGenerator:
             back_end_x = flap_width + cover_width
 
         # Position barcode area on lower-right of back cover
-        # Clear space from right edge and bottom edge
-        barcode_x1 = back_end_x - barcode_width - clearance
-        barcode_y1 = height - barcode_height - clearance
-        barcode_x2 = back_end_x - clearance
-        barcode_y2 = height - clearance
+        # Clear space from right edge and bottom edge (using type-specific clearances)
+        barcode_x1 = back_end_x - barcode_width - clearance_side
+        barcode_y1 = height - barcode_height - clearance_bottom
+        barcode_x2 = back_end_x - clearance_side
+        barcode_y2 = height - clearance_bottom
 
         # Draw white rectangle for barcode
         draw.rectangle([barcode_x1, barcode_y1, barcode_x2, barcode_y2], fill=(255, 255, 255))

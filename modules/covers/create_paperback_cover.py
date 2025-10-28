@@ -102,18 +102,24 @@ def create_paperback_cover():
     # Amazon KDP requires PDF format for print covers
     output_file = "IT-Career-Blueprint-Paperback.pdf"
 
-    # Ensure RGB mode
-    if paperback.mode != 'RGB':
+    # Ensure RGB mode first (required for consistent conversion)
+    if paperback.mode not in ('RGB', 'CMYK'):
         paperback = paperback.convert('RGB')
+
+    # Convert to CMYK for print quality (KDP recommendation)
+    if paperback.mode != 'CMYK':
+        paperback = paperback.convert('CMYK')
+        print("  Color mode: CMYK (print-optimized)")
 
     # Create PDF with exact dimensions
     c = canvas.Canvas(output_file, pagesize=(width_inches * inch, height_inches * inch))
     c.setTitle("IT Career Blueprint - Paperback Cover")
     c.setCreator("E-Book Maker v2.1")
-    c.setSubject("Book Cover - Amazon KDP Compliant")
+    c.setSubject("Book Cover - Amazon KDP Compliant - Print Ready")
 
     # Save PIL image to buffer as high-quality JPEG
     img_buffer = io.BytesIO()
+    # JPEG format supports both RGB and CMYK
     paperback.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
     img_buffer.seek(0)
 

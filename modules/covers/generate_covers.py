@@ -88,23 +88,31 @@ def create_ebook_cover():
 
     return img
 
-def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover"):
+def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover", use_cmyk=True):
     """
     Save PIL Image as PDF with KDP compliance
 
-    Amazon KDP requires PDF format for print covers (paperback/hardback)
+    Amazon KDP requirements for print covers:
+    - PDF format (paperback/hardback)
+    - 300 DPI minimum resolution
+    - CMYK color mode for print quality (recommended)
 
     Args:
         img: PIL Image object
         output_path: Path to save PDF
         dpi: Resolution in DPI (300 for KDP)
         title: PDF document title
+        use_cmyk: Convert to CMYK for print (default: True)
     """
     from reportlab.lib.utils import ImageReader
 
-    # Ensure RGB mode
-    if img.mode != 'RGB':
+    # Ensure RGB mode first (required for consistent conversion)
+    if img.mode not in ('RGB', 'CMYK'):
         img = img.convert('RGB')
+
+    # Convert to CMYK for print quality (KDP recommendation)
+    if use_cmyk and img.mode != 'CMYK':
+        img = img.convert('CMYK')
 
     # Calculate page size in inches (at specified DPI)
     width_inches = img.width / dpi
@@ -116,10 +124,11 @@ def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover"):
     # Set PDF metadata for KDP compliance
     c.setTitle(title)
     c.setCreator("E-Book Maker v2.1")
-    c.setSubject("Book Cover - Amazon KDP Compliant")
+    c.setSubject("Book Cover - Amazon KDP Compliant - Print Ready")
 
     # Save PIL image to temporary buffer as high-quality JPEG
     img_buffer = io.BytesIO()
+    # JPEG format supports both RGB and CMYK
     img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
     img_buffer.seek(0)
 
@@ -151,13 +160,16 @@ def calculate_spine_width(page_count, paper_type='white', binding_type='paperbac
         Spine width in inches
     """
     # KDP spine width calculations (inches per page)
+    # Source: https://kdp.amazon.com/en_US/help/topic/G201834180
+    # Official Amazon KDP formulas (verified October 2025)
     paper_thickness = {
-        'white': 0.0025,      # White paper: 0.0025" per page
-        'cream': 0.0027,      # Cream paper: 0.0027" per page
-        'color': 0.0025,      # Color paper: 0.0025" per page
+        'white': 0.002252,      # Black & White - White paper: 0.002252" per page
+        'cream': 0.0025,        # Black & White - Cream paper: 0.0025" per page
+        'color': 0.002347,      # Premium Color: 0.002347" per page
+        'standard_color': 0.002252,  # Standard Color: 0.002252" per page
     }
 
-    thickness_per_page = paper_thickness.get(paper_type.lower(), 0.0025)
+    thickness_per_page = paper_thickness.get(paper_type.lower(), 0.002252)
     spine_width = page_count * thickness_per_page
 
     # Hardcover boards add thickness

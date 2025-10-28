@@ -2,6 +2,11 @@
 E-Book Converter Module
 Converts markdown/text/HTML to EPUB, PDF, and HTML using Pandoc
 Consolidated from IT-Career-Blueprint-EBook pandoc tools
+
+Supports:
+- Amazon KDP-compliant margins for print books
+- Multiple PDF engines (wkhtmltopdf, pdflatex, weasyprint)
+- Page count-based gutter margins
 """
 
 import os
@@ -10,8 +15,19 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
+import sys
+
+# Add parent directory to path for module imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from .text_normalizer import TextNormalizer
 from .page_numbering import PageNumberingConfig
+
+try:
+    from kdp_calculator import KDPCalculator
+except ImportError:
+    # Fallback if kdp_calculator not available
+    KDPCalculator = None
 
 
 class EBookConverter:
@@ -213,8 +229,24 @@ class EBookConverter:
             print(f"Error converting to EPUB: {e}")
             return False
 
-    def convert_to_pdf(self, content: str, output_path: Path, title: str, author: str) -> bool:
-        """Convert content to PDF format"""
+    def convert_to_pdf(self, content: str, output_path: Path, title: str, author: str,
+                      kdp_compliant: bool = False, page_count: Optional[int] = None,
+                      custom_margins: Optional[Dict[str, float]] = None) -> bool:
+        """
+        Convert content to PDF format
+
+        Args:
+            content: Markdown content to convert
+            output_path: Output PDF file path
+            title: Book title
+            author: Book author
+            kdp_compliant: Use Amazon KDP-compliant margins (default: False)
+            page_count: Page count for KDP gutter calculation (required if kdp_compliant=True)
+            custom_margins: Custom margins dict {'top': 0.75, 'bottom': 0.75, 'outside': 0.75, 'gutter': 0.5}
+
+        Returns:
+            True if successful, False otherwise
+        """
         try:
             # Get available PDF engine
             pdf_engine = self.get_available_pdf_engine()
@@ -246,6 +278,29 @@ class EBookConverter:
                 cmd.extend(['--pdf-engine=wkhtmltopdf'])
             elif pdf_engine == 'pdflatex':
                 cmd.extend(['--pdf-engine=pdflatex'])
+
+                # Add KDP-compliant margins for pdflatex
+                if kdp_compliant and KDPCalculator and page_count:
+                    margins = KDPCalculator.calculate_manuscript_margins(page_count)
+                    geometry = (
+                        f'top={margins.top}in,'
+                        f'bottom={margins.bottom}in,'
+                        f'outer={margins.outside}in,'
+                        f'inner={margins.gutter}in'
+                    )
+                    cmd.extend(['-V', f'geometry:{geometry}'])
+                    print(f"  KDP Margins: Top={margins.top}\", Bottom={margins.bottom}\", "
+                          f"Outer={margins.outside}\", Gutter={margins.gutter}\"")
+                elif custom_margins:
+                    # Use custom margins
+                    geometry = (
+                        f'top={custom_margins.get("top", 0.75)}in,'
+                        f'bottom={custom_margins.get("bottom", 0.75)}in,'
+                        f'outer={custom_margins.get("outside", 0.75)}in,'
+                        f'inner={custom_margins.get("gutter", 0.5)}in'
+                    )
+                    cmd.extend(['-V', f'geometry:{geometry}'])
+
             elif pdf_engine == 'weasyprint':
                 cmd.extend(['--pdf-engine=weasyprint'])
 
