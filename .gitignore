@@ -53,6 +53,10 @@ output/watermarked/*
 output/test_results/*
 !output/test_results/.gitkeep
 
+# Test covers - generated files (exclude from git)
+output/test_covers/*
+!output/test_covers/.gitkeep
+
 # Sample files - keep for documentation/testing
 # output/sample_files/
 
@@ -82,6 +86,9 @@ config/*.local
 # GitHub preparation files (temporary)
 GITHUB_READY.md
 PUSH_READY.md
+
+# KDP Excel calculator (large file, users can download from Amazon)
+KDP_Print_File_Setup_Calculator*.xlsm
 
 # Setup/Installer files (these belong in GitHub Releases, not in git)
 setup/*.exe

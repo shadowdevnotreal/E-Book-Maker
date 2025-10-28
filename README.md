@@ -260,23 +260,34 @@ E-Book-Maker/
 ├── server.py                  # Flask web server
 ├── start.bat / start.sh       # Auto-install & launch scripts
 ├── check_install.py           # Dependency verification tool
+├── test_kdp_compliance.py     # KDP compliance test suite (30 tests)
 ├── requirements.txt           # Python dependencies
 │
 ├── modules/                   # Core functionality (modular design)
+│   ├── kdp_calculator.py     # 🆕 Amazon KDP calculator module
+│   │                         # - Spine width calculations (official formulas)
+│   │                         # - Cover dimensions (paperback/hardback)
+│   │                         # - Manuscript margins (page count-based)
+│   │                         # - Trim size validation (18 standard sizes)
+│   │
 │   ├── conversion/           # Document conversion engine
-│   │   ├── converter.py      # Main converter (web-integrated)
+│   │   ├── converter.py      # Main converter (KDP margins support)
 │   │   ├── text_normalizer.py # Text encoding & bullet point fixer
+│   │   ├── page_numbering.py  # Professional page numbering
 │   │   └── interactive_build.py # CLI interface
 │   │
 │   ├── covers/               # Cover generation system
-│   │   ├── cover_generator.py # KDP-compliant cover creator
-│   │   ├── generate_covers.py # CLI tool
-│   │   └── convert_cover.py   # Format converter
+│   │   ├── cover_generator.py # KDP-compliant cover creator (CMYK)
+│   │   ├── generate_covers.py # CLI tool with spine calculator
+│   │   ├── convert_cover.py   # Format converter
+│   │   └── create_paperback_cover.py # Paperback cover generator
 │   │
-│   └── watermarking/         # Document watermarking suite
-│       ├── watermarker.py    # Multi-format watermarker
-│       ├── watermark_generator.py # CLI tool
-│       └── apply_watermarks.py    # Batch processor
+│   ├── watermarking/         # Document watermarking suite
+│   │   ├── watermarker.py    # Multi-format watermarker
+│   │   ├── watermark_generator.py # CLI tool
+│   │   └── apply_watermarks.py    # Batch processor
+│   │
+│   └── utils/                # Utility functions
 │
 ├── web/                      # Web interface
 │   ├── templates/            # HTML pages
@@ -291,7 +302,8 @@ E-Book-Maker/
 │       └── images/          # UI assets
 │
 ├── config/                   # Configuration files
-│   └── pandoc/              # Pandoc templates
+│   ├── default_config.json  # 🆕 KDP specs (trim sizes, margins, formulas)
+│   └── templates/           # Pandoc templates
 │
 ├── setup/                    # Windows installers & setup scripts
 │   ├── SETUP-WINDOWS.bat    # PATH configuration
@@ -303,26 +315,32 @@ E-Book-Maker/
 │   ├── KDP_COMPLIANCE_TEST_REPORT.md  # Full test results
 │   ├── TEST_REPORT.md                 # Feature testing
 │   ├── IMPLEMENTATION_SUMMARY.md      # Technical docs
+│   ├── FORMAT_ANALYSIS.md             # Format specifications
 │   └── SETUP_TROUBLESHOOTING.md       # Help guide
 │
-├── chapters/                 # Your book chapters (markdown)
-├── appendices/               # Appendix content
-├── drafts/                   # Work in progress
+├── assets/                   # Project assets
+│   ├── fonts/               # Custom fonts
+│   ├── images/              # User images (gitignored)
+│   ├── logos/               # Watermark logos (gitignored)
+│   └── styles/              # Style templates
 │
-├── assets/                   # Book assets
-│   ├── images/              # Book images
-│   └── logos/               # Watermark logos
-│
-├── output/                   # Generated outputs
+├── output/                   # Generated outputs (gitignored)
 │   ├── ebooks/              # Final e-books (EPUB, PDF, HTML, DOCX, MD)
 │   ├── covers/              # Final covers
 │   ├── watermarked/         # Watermarked documents
+│   ├── uploads/             # Temporary uploads
+│   ├── test_covers/         # Cover test outputs
 │   ├── test_results/        # Test outputs (verification)
 │   └── sample_files/        # Sample files for testing
 │
-└── test_files/              # Testing samples
-    ├── input/               # Sample input files
-    └── output/              # Test outputs
+└── test_files/              # Testing samples & examples
+    ├── chapters/            # Sample book chapters
+    ├── appendices/          # Sample appendices
+    ├── input/               # Sample input files (various formats)
+    └── output/              # Expected test outputs
+
+Note: Virtual environment (venv/), cache (__pycache__), and user content
+are excluded from git repository via .gitignore
 ```
 
 </details>
@@ -675,8 +693,11 @@ For commercial licensing inquiries, partnerships, or custom development:
 ---
 
 **🎉 New in v2.1:**
-✅ Automatic page numbering (PDF & DOCX) | ✅ Folder upload support (chapters/appendixes) | ✅ PDF cover input support
-✅ KDP barcode safe area | ✅ Centered vertical spine text | ✅ 300 DPI print-ready output
+✅ **KDP Calculator Module** - Official Amazon formulas (spine, margins, trim sizes)
+✅ **CMYK Color Mode** - Professional print-ready covers
+✅ **30-Test Suite** - Comprehensive KDP compliance validation
+✅ Automatic page numbering (PDF & DOCX) | ✅ Folder upload support (chapters/appendixes)
+✅ KDP barcode safe area (hardback: 0.76" clearance) | ✅ Centered vertical spine text
 
 **v2.0:**
 ✅ Universal input support (9+ formats) | ✅ Hardback cover generation | ✅ Markdown watermarking
