@@ -39,7 +39,8 @@ app.config['OUTPUT_FOLDER'] = BASE_DIR / 'output'
 app.config['ALLOWED_EXTENSIONS'] = {
     'document': {'md', 'markdown', 'txt', 'html', 'htm', 'pdf', 'docx', 'epub',
                  'odt', 'rtf', 'tex', 'latex', 'rst', 'org'},
-    'image': {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+    'image': {'png', 'jpg', 'jpeg', 'gif', 'bmp'},
+    'cover': {'pdf', 'png', 'jpg', 'jpeg', 'bmp', 'gif'}  # Covers can be PDF or images
 }
 
 # Ensure directories exist
@@ -256,18 +257,24 @@ def api_create_cover():
 
 @app.route('/api/convert-cover', methods=['POST'])
 def api_convert_cover():
-    """Convert cover image format"""
+    """Convert cover from PDF or image format"""
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file provided'}), 400
 
         file = request.files['file']
-        target_type = request.form.get('type', 'ebook')  # ebook or paperback
+        target_type = request.form.get('type', 'ebook')  # ebook, paperback, or hardback
+        title = request.form.get('title', '')
+        author = request.form.get('author', '')
+        subtitle = request.form.get('subtitle', '')
+        add_text = request.form.get('add_text', 'true') == 'true'
+        add_barcode = request.form.get('add_barcode', 'true') == 'true'
 
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
 
-        if file and allowed_file(file.filename, 'image'):
+        # Accept both PDF and image files for covers
+        if file and allowed_file(file.filename, 'cover'):
             filename = secure_filename(file.filename)
             filepath = app.config['UPLOAD_FOLDER'] / filename
             file.save(str(filepath))
@@ -278,7 +285,12 @@ def api_convert_cover():
                 output_path = generator.convert_cover(
                     input_file=filepath,
                     target_type=target_type,
-                    output_dir=app.config['OUTPUT_FOLDER'] / 'covers'
+                    output_dir=app.config['OUTPUT_FOLDER'] / 'covers',
+                    title=title,
+                    subtitle=subtitle,
+                    author=author,
+                    add_text=add_text,
+                    add_barcode_area=add_barcode
                 )
 
                 # Convert to relative path for download
@@ -289,13 +301,13 @@ def api_convert_cover():
 
                 return jsonify({
                     'success': True,
-                    'message': 'Cover converted successfully',
+                    'message': f'Cover converted successfully from {Path(filename).suffix.upper()}',
                     'file': str(relative_path)
                 })
             except Exception as e:
                 return jsonify({'error': f'Cover conversion failed: {str(e)}'}), 500
 
-        return jsonify({'error': 'Invalid file type'}), 400
+        return jsonify({'error': 'Invalid file type. Supported: PDF, PNG, JPG, JPEG, BMP, GIF'}), 400
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

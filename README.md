@@ -69,6 +69,15 @@ Point & Click           CLI Tools Available     Production Ready
 
 - **📥 Input Formats**: DOCX, EPUB, RTF, ODT, LaTeX (.tex), ReStructuredText (.rst), Org-mode (.org), Markdown, HTML
 - **📤 Output Formats**: EPUB, PDF (300 DPI), HTML, DOCX, Markdown
+- **🔢 Automatic Page Numbering** (NEW v2.1) - Professional page numbering for PDF and DOCX
+  - Position control (header/footer, left/center/right)
+  - Numbering styles (Arabic, Roman, Alphabet)
+  - Front matter support (different numbering for preface/TOC)
+  - Customizable page number appearance
+- **📁 Folder Upload Support** (NEW v2.1) - Organize chapters and appendixes
+  - Automatic detection of chapters/ and appendixes/ folders
+  - Alphabetical sorting within folders
+  - Seamless folder structure preservation
 - **📚 Multi-Chapter Support** - Automatic table of contents generation
 - **🔤 Text Normalization** - Fixes encoding issues and bullet point conversions
 - **📝 Custom Metadata** - Title, author, subtitle, and more
@@ -85,16 +94,23 @@ Point & Click           CLI Tools Available     Production Ready
 - **📱 E-Book Covers** - 1600×2560 px (1.6:1 aspect ratio), 300 DPI, RGB, JPEG quality 95
 - **📖 Paperback Covers** - Full wrap with calculated spine based on page count
 - **📕 Hardback Covers** - Complete dust jacket with front/back flaps
+- **📄 PDF Input Support** - Convert PDF files to KDP-compliant covers (NEW v2.1)
+- **📊 Barcode Safe Area** - Automatic 2.0" × 1.2" white box for ISBN/barcode placement (NEW v2.1)
+  - Position: Lower-right of back cover
+  - Clearance: 0.25" from edges and spine
+  - KDP compliant positioning
 - **📐 Dynamic Spine Calculator** - Accurate spine width based on:
   - Page count
   - Paper type (white, cream, color)
   - Interior type (black & white, color)
+- **📝 Vertical Spine Text** - Centered title + author on spine (NEW v2.1)
 - **🎨 Customizable Styles**:
   - Gradient backgrounds
   - Solid color designs
   - Minimalist layouts
 - **🖌️ Typography Controls** - Custom fonts, colors, and positioning
-- **♻️ Format Conversion** - Convert existing covers to KDP specs
+- **♻️ Format Conversion** - Convert existing covers (PDF/PNG/JPG) to KDP specs
+- **🖨️ Print-Ready Output** - 300 DPI for all cover types
 - **✅ KDP Verified** - All outputs tested and compliant
 
 </details>
@@ -652,11 +668,17 @@ For commercial licensing inquiries, partnerships, or custom development:
 
 <a href="https://www.buymeacoffee.com/diatasso" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-**Version**: 2.0.0 | **Build**: Amazon KDP Compliance Release | **Last Updated**: October 2025
+**Version**: 2.1.0 | **Build**: Professional Publishing Release | **Last Updated**: October 2025
+
+📋 **[View Full Changelog](CHANGELOG.md)**
 
 ---
 
-**🎉 New in v2.0:**
+**🎉 New in v2.1:**
+✅ Automatic page numbering (PDF & DOCX) | ✅ Folder upload support (chapters/appendixes) | ✅ PDF cover input support
+✅ KDP barcode safe area | ✅ Centered vertical spine text | ✅ 300 DPI print-ready output
+
+**v2.0:**
 ✅ Universal input support (9+ formats) | ✅ Hardback cover generation | ✅ Markdown watermarking
 ✅ Dynamic spine calculator | ✅ 100% KDP compliance (36/36 tests) | ✅ Production ready
 

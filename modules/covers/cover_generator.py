@@ -2,11 +2,18 @@
 Book Cover Generator Module
 Creates and converts book covers for e-books and paperbacks
 Consolidated from AMAZON_KDP_PACKAGE cover tools
+
+Supports:
+- PDF, PNG, JPG, JPEG input formats
+- 300 DPI print-ready output
+- KDP-compliant barcode safe area (2.0" × 1.2")
+- Vertical spine text (centered)
 """
 
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 from typing import Dict, Optional, Tuple
+import fitz  # PyMuPDF for PDF support
 
 
 class CoverGenerator:
@@ -303,16 +310,51 @@ class CoverGenerator:
 
         return output_path
 
+    def _load_cover_image(self, input_file: Path) -> Image.Image:
+        """
+        Load cover from PDF or image file
+
+        Args:
+            input_file: Path to input file (PDF, PNG, JPG, JPEG)
+
+        Returns:
+            PIL Image object
+        """
+        input_file = Path(input_file)
+        file_ext = input_file.suffix.lower()
+
+        # Handle PDF files
+        if file_ext == '.pdf':
+            try:
+                pdf_document = fitz.open(str(input_file))
+                # Get first page
+                page = pdf_document[0]
+                # Convert to image at 300 DPI
+                pix = page.get_pixmap(dpi=300)
+                # Convert to PIL Image
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                pdf_document.close()
+                return img
+            except Exception as e:
+                raise Exception(f"Error loading PDF: {e}")
+
+        # Handle image files
+        elif file_ext in ['.png', '.jpg', '.jpeg', '.bmp', '.gif']:
+            return Image.open(input_file)
+
+        else:
+            raise ValueError(f"Unsupported file format: {file_ext}. Use PDF, PNG, JPG, or JPEG.")
+
     def convert_cover(self, input_file: Path, target_type: str,
                      output_dir: Path, title: str = '', subtitle: str = '',
                      author: str = '', add_text: bool = True,
                      title_color: str = '#FFFFFF', spine_color: str = '#FF6B35',
-                     title_position: str = 'top') -> Path:
+                     title_position: str = 'top', add_barcode_area: bool = True) -> Path:
         """
         Convert cover image to target format with optional text overlay
 
         Args:
-            input_file: Path to input cover image
+            input_file: Path to input cover (PDF, PNG, JPG, JPEG)
             target_type: 'ebook', 'paperback', or 'hardback'
             output_dir: Output directory
             title: Book title (optional, will add overlay if provided)
@@ -322,6 +364,7 @@ class CoverGenerator:
             title_color: Hex color for title text (default: white)
             spine_color: Hex color for spine background band (default: orange)
             title_position: 'top', 'center', or 'bottom' (default: 'top')
+            add_barcode_area: Add KDP barcode safe area for paperback/hardback (default: True)
 
         Returns:
             Path to converted cover
@@ -329,8 +372,8 @@ class CoverGenerator:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Load image
-        img = Image.open(input_file)
+        # Load image (supports PDF and images)
+        img = self._load_cover_image(input_file)
 
         # Convert to RGB if necessary
         if img.mode in ('RGBA', 'LA', 'P'):
@@ -496,6 +539,10 @@ class CoverGenerator:
                 title_color, spine_color, title_position, target_size
             )
 
+        # Add barcode safe area for paperback/hardback
+        if add_barcode_area and target_type in ['paperback', 'hardback']:
+            img_resized = self._add_barcode_safe_area(img_resized, target_type, dpi)
+
         # Save converted cover
         input_stem = Path(input_file).stem
         output_filename = f"{target_type}_converted_{input_stem}.jpg"
@@ -616,8 +663,16 @@ class CoverGenerator:
                 # Add background to spine
                 spine_draw.rectangle([0, 0, height, spine_width], fill=(*spine_rgb, 255))
 
-                # Draw spine text
-                spine_draw.text((height // 4, spine_width // 2 - 20), spine_text, fill=text_rgb, font=spine_font)
+                # Draw spine text (centered horizontally on the spine)
+                spine_text_bbox = spine_draw.textbbox((0, 0), spine_text, font=spine_font)
+                spine_text_width = spine_text_bbox[2] - spine_text_bbox[0]
+                spine_text_height = spine_text_bbox[3] - spine_text_bbox[1]
+
+                # Center the text on the spine
+                spine_text_x = (height - spine_text_width) // 2
+                spine_text_y = (spine_width - spine_text_height) // 2
+
+                spine_draw.text((spine_text_x, spine_text_y), spine_text, fill=text_rgb, font=spine_font)
 
                 # Rotate and paste spine
                 spine_img = spine_img.rotate(90, expand=True)
@@ -664,6 +719,62 @@ class CoverGenerator:
                 author_x = (width - author_width) // 2
                 author_y = height - 200
                 draw.text((author_x, author_y), author, fill=text_rgb, font=author_font)
+
+        return img
+
+    def _add_barcode_safe_area(self, img: Image.Image, cover_type: str, dpi: int = 300) -> Image.Image:
+        """
+        Add KDP barcode safe area to paperback/hardback back cover
+
+        Amazon KDP requirements:
+        - White box: 2.0" × 1.2" (600 × 360 pixels at 300 DPI)
+        - Position: Lower-right of back cover
+        - Clear space: 0.25" from trim edges and spine (75 pixels at 300 DPI)
+
+        Args:
+            img: Cover image
+            cover_type: 'paperback' or 'hardback'
+            dpi: Resolution (default 300)
+
+        Returns:
+            Image with barcode safe area
+        """
+        if cover_type not in ['paperback', 'hardback']:
+            return img  # E-books don't need barcode area
+
+        width, height = img.size
+        draw = ImageDraw.Draw(img)
+
+        # Calculate dimensions in pixels
+        barcode_width = int(2.0 * dpi)   # 2.0 inches = 600 pixels at 300 DPI
+        barcode_height = int(1.2 * dpi)  # 1.2 inches = 360 pixels at 300 DPI
+        clearance = int(0.25 * dpi)      # 0.25 inches = 75 pixels at 300 DPI
+
+        # Determine back cover position
+        if cover_type == 'paperback':
+            spine_width = self.PAPERBACK_SPINE_WIDTH
+            back_width = (width - spine_width) // 2
+            back_start_x = 0
+            back_end_x = back_width
+        else:  # hardback
+            flap_width = self.ALT_HARDBACK_FLAP_WIDTH
+            spine_width = self.ALT_HARDBACK_SPINE_WIDTH
+            cover_width = (width - (2 * flap_width) - spine_width) // 2
+            back_start_x = flap_width
+            back_end_x = flap_width + cover_width
+
+        # Position barcode area on lower-right of back cover
+        # Clear space from right edge and bottom edge
+        barcode_x1 = back_end_x - barcode_width - clearance
+        barcode_y1 = height - barcode_height - clearance
+        barcode_x2 = back_end_x - clearance
+        barcode_y2 = height - clearance
+
+        # Draw white rectangle for barcode
+        draw.rectangle([barcode_x1, barcode_y1, barcode_x2, barcode_y2], fill=(255, 255, 255))
+
+        # Add thin border for visibility during design
+        draw.rectangle([barcode_x1, barcode_y1, barcode_x2, barcode_y2], outline=(200, 200, 200), width=2)
 
         return img
 
