@@ -22,6 +22,29 @@
         </nav>
 
         <main class="covers-page">
+            <!-- Requirements Info Section -->
+            <div class="info-banner">
+                <h3>📋 Requirements for Cover Creation</h3>
+                <div class="requirements-grid">
+                    <div class="req-item">
+                        <strong>✅ Python Packages (Auto-Installed)</strong>
+                        <p>Pillow, PyMuPDF - Automatically installed by <code>start.bat</code> (Windows) or <code>start.sh</code> (Linux/Mac)</p>
+                    </div>
+                    <div class="req-item">
+                        <strong>🖼️ Cover Features</strong>
+                        <p>Create covers from scratch • Convert PDF/images • Add spine text • KDP barcode safe area • 300 DPI print-ready</p>
+                    </div>
+                </div>
+                <details class="install-help">
+                    <summary>💡 First Time Setup (Windows)</summary>
+                    <div class="install-steps">
+                        <p><strong>Step 1:</strong> Run <code>start.bat</code> - it will automatically install all Python packages (Pillow, PyMuPDF, Flask, etc.)</p>
+                        <p><strong>Step 2:</strong> That's it! Cover creation works with just Python packages. No additional tools needed.</p>
+                        <p><strong>Note:</strong> For document conversion features (Convert page), you'll need Pandoc. See <a href="/settings">Settings</a> for installation instructions.</p>
+                    </div>
+                </details>
+            </div>
+
             <div class="tool-tabs">
                 <button class="tool-tab-btn active" data-tab="create">Create New Cover</button>
                 <button class="tool-tab-btn" data-tab="convert">Convert Existing Cover</button>

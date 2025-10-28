@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend already supported these features; UI now exposes them
   - Enables custom spine text when converting uploaded covers
 
+#### 📋 Cover Page Requirements Banner
+- **Added requirements info banner** to Covers page
+  - Shows Python packages needed (Pillow, PyMuPDF) with auto-install note
+  - Displays cover features overview (create, convert, spine text, barcode, 300 DPI)
+  - Expandable "First Time Setup (Windows)" section with step-by-step instructions
+  - Clear indication that `start.bat` automatically installs all dependencies
+  - Link to Settings page for additional tools (Pandoc for document conversion)
+  - Fully responsive design with gradient styling
+
 ### Added - Professional Publishing Features
 
 #### 📄 Document Conversion Enhancements
