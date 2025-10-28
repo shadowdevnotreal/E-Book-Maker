@@ -81,6 +81,15 @@ config/*.local
 
 # GitHub preparation files (temporary)
 GITHUB_READY.md
+PUSH_READY.md
+
+# Setup/Installer files (these belong in GitHub Releases, not in git)
+setup/*.exe
+setup/*.msi
+setup/*.zip
+setup/*.tar.gz
+setup/*.deb
+setup/*.rpm
 
 # Database files
 *.db
