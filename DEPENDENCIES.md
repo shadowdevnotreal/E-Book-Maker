@@ -148,17 +148,17 @@ The startup scripts will automatically install it.
 ```bash
 # Windows
 venv\Scripts\activate.bat
-pip install Flask Pillow PyPDF2 reportlab python-docx
+pip install Flask Pillow PyPDF2 reportlab python-docx PyMuPDF Werkzeug
 
 # Linux/macOS
 source venv/bin/activate
-pip install Flask Pillow PyPDF2 reportlab python-docx
+pip install Flask Pillow PyPDF2 reportlab python-docx PyMuPDF Werkzeug
 ```
 
 ### Check what's installed
 
 ```bash
-pip list | grep -E "Flask|Pillow|PyPDF2|reportlab|python-docx"
+pip list | grep -E "Flask|Pillow|PyPDF2|reportlab|python-docx|PyMuPDF|Werkzeug"
 ```
 
 ---

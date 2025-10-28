@@ -242,7 +242,7 @@ chmod +x start.sh  # First time only
 
 **What happens automatically:**
 1. ✅ Creates Python virtual environment
-2. ✅ Installs Flask, Pillow, PyPDF2, reportlab, python-docx
+2. ✅ Installs Flask, Pillow, PyPDF2, reportlab, python-docx, PyMuPDF, Werkzeug
 3. ✅ Starts the web server on port 5000
 4. ✅ Opens your browser to http://127.0.0.1:5000
 

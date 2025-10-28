@@ -215,7 +215,7 @@ CALL venv\Scripts\activate.bat
 REM Install/update dependencies
 echo.
 echo Installing Python dependencies...
-echo (Flask, Pillow, PyPDF2, reportlab, python-docx)
+echo (Flask, Pillow, PyPDF2, reportlab, python-docx, PyMuPDF, Werkzeug)
 echo.
 python -m pip install --upgrade pip --quiet
 python -m pip install -r requirements.txt --quiet

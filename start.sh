@@ -30,7 +30,7 @@ source venv/bin/activate
 # Install/upgrade dependencies
 echo ""
 echo "Installing/updating dependencies from requirements.txt..."
-echo "This includes: Flask, Pillow, PyPDF2, reportlab, python-docx"
+echo "This includes: Flask, Pillow, PyPDF2, reportlab, python-docx, PyMuPDF, Werkzeug"
 echo ""
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -44,7 +44,7 @@ if [ $? -ne 0 ]; then
     echo ""
     echo "Try running these commands manually:"
     echo "  source venv/bin/activate"
-    echo "  pip install Flask Pillow PyPDF2 reportlab python-docx"
+    echo "  pip install Flask Pillow PyPDF2 reportlab python-docx PyMuPDF Werkzeug"
     echo ""
     read -p "Press Enter to continue anyway..."
 fi
