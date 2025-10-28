@@ -98,25 +98,88 @@ def api_convert():
         output_formats = request.form.getlist('formats')
         title = request.form.get('title', 'Untitled E-Book')
         author = request.form.get('author', 'Unknown Author')
+        is_folder = request.form.get('is_folder') == 'true'
 
         if not files or files[0].filename == '':
             return jsonify({'error': 'No files selected'}), 400
 
         # Save uploaded files
         input_files = []
-        for file in files:
-            if file and allowed_file(file.filename, 'document'):
-                filename = secure_filename(file.filename)
-                filepath = app.config['UPLOAD_FOLDER'] / filename
-                file.save(str(filepath))
-                input_files.append(filepath)
+
+        if is_folder:
+            # Handle folder upload - organize by chapters/appendixes
+            chapters = []
+            appendixes = []
+            other_files = []
+
+            for file in files:
+                if file and allowed_file(file.filename, 'document'):
+                    # Get the relative path to determine folder structure
+                    relative_path = file.filename  # This contains webkitRelativePath
+                    path_parts = relative_path.split('/')
+
+                    # Determine which folder this file belongs to
+                    folder_name = path_parts[-2] if len(path_parts) > 1 else ''
+                    base_filename = path_parts[-1]
+
+                    # Create unique filename to avoid conflicts
+                    unique_filename = secure_filename(f"{folder_name}_{base_filename}")
+                    filepath = app.config['UPLOAD_FOLDER'] / unique_filename
+                    file.save(str(filepath))
+
+                    # Categorize by folder
+                    if 'chapter' in folder_name.lower():
+                        chapters.append((base_filename, filepath))
+                    elif 'appendix' in folder_name.lower() or 'appendices' in folder_name.lower():
+                        appendixes.append((base_filename, filepath))
+                    else:
+                        other_files.append((base_filename, filepath))
+
+            # Sort alphabetically within each category
+            chapters.sort(key=lambda x: x[0])
+            appendixes.sort(key=lambda x: x[0])
+            other_files.sort(key=lambda x: x[0])
+
+            # Combine in order: chapters, appendixes, other files
+            input_files = [f[1] for f in chapters] + [f[1] for f in appendixes] + [f[1] for f in other_files]
+
+        else:
+            # Handle individual file uploads
+            for file in files:
+                if file and allowed_file(file.filename, 'document'):
+                    filename = secure_filename(file.filename)
+                    filepath = app.config['UPLOAD_FOLDER'] / filename
+                    file.save(str(filepath))
+                    input_files.append(filepath)
 
         if not input_files:
             return jsonify({'error': 'No valid document files'}), 400
 
         # Convert using EBookConverter
         try:
-            converter = EBookConverter()
+            # Build page numbering configuration
+            page_numbering_config = None
+            if request.form.get('page_numbering_enabled') == 'true':
+                page_numbering_config = {
+                    'enabled': True,
+                    'pdf': {
+                        'enabled': True,
+                        'position': request.form.get('page_number_position', 'footer-center'),
+                        'style': request.form.get('page_number_style', 'arabic'),
+                        'front_matter': {
+                            'enabled': request.form.get('front_matter_enabled') == 'true',
+                            'style': request.form.get('front_matter_style', 'roman')
+                        }
+                    },
+                    'docx': {
+                        'enabled': True,
+                        'position': request.form.get('page_number_position', 'footer-center'),
+                        'style': request.form.get('page_number_style', 'arabic'),
+                        'reference_doc': str(Path(__file__).parent / 'config' / 'templates' / 'reference-with-pagenumbers.docx')
+                    }
+                }
+
+            converter = EBookConverter(page_numbering_config=page_numbering_config)
             results = converter.convert(
                 input_files=input_files,
                 output_formats=output_formats,

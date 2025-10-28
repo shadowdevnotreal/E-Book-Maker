@@ -30,6 +30,20 @@
                     <!-- File Upload -->
                     <div class="form-group">
                         <label>Upload Documents</label>
+
+                        <!-- Upload Mode Toggle -->
+                        <div class="upload-mode-toggle" style="margin-bottom: 15px;">
+                            <label class="radio-label">
+                                <input type="radio" name="upload-mode" value="files" checked onchange="switchUploadMode('files')">
+                                <span>Individual Files</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="upload-mode" value="folder" onchange="switchUploadMode('folder')">
+                                <span>Folder (with chapters/appendixes)</span>
+                            </label>
+                        </div>
+
+                        <!-- Files Upload -->
                         <div class="file-drop-zone" id="file-drop-zone">
                             <div class="drop-zone-content">
                                 <span class="drop-icon">📁</span>
@@ -38,6 +52,17 @@
                             </div>
                             <input type="file" id="file-input" name="files" multiple accept=".md,.markdown,.txt,.html,.htm,.docx,.epub,.odt,.rtf,.tex,.latex,.rst,.org" style="display: none;">
                         </div>
+
+                        <!-- Folder Upload (hidden by default) -->
+                        <div class="file-drop-zone" id="folder-drop-zone" style="display: none;">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📂</span>
+                                <p>Click to select folder with chapters/ and appendixes/</p>
+                                <p class="file-info">Folder structure: chapters/*.md, appendixes/*.md</p>
+                            </div>
+                            <input type="file" id="folder-input" name="folder" webkitdirectory directory multiple style="display: none;">
+                        </div>
+
                         <div id="file-list" class="uploaded-files"></div>
                     </div>
 
@@ -99,6 +124,54 @@
                                 <span>Normalize text encoding</span>
                             </label>
                         </div>
+
+                        <!-- Page Numbering Options -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="page_numbering_enabled" id="page-numbering-toggle" checked onchange="togglePageNumberingOptions()">
+                                <span>Enable automatic page numbering (PDF & DOCX)</span>
+                            </label>
+                        </div>
+
+                        <div id="page-numbering-options" style="margin-left: 20px; padding: 15px; border-left: 3px solid var(--primary-color); background: var(--bg-color); border-radius: 8px;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="page-number-position">Position</label>
+                                    <select id="page-number-position" name="page_number_position">
+                                        <option value="footer-center" selected>Footer - Center</option>
+                                        <option value="footer-left">Footer - Left</option>
+                                        <option value="footer-right">Footer - Right</option>
+                                        <option value="header-center">Header - Center</option>
+                                        <option value="header-left">Header - Left</option>
+                                        <option value="header-right">Header - Right</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="page-number-style">Numbering Style</label>
+                                    <select id="page-number-style" name="page_number_style">
+                                        <option value="arabic" selected>Arabic (1, 2, 3...)</option>
+                                        <option value="roman">Roman lowercase (i, ii, iii...)</option>
+                                        <option value="Roman">Roman uppercase (I, II, III...)</option>
+                                        <option value="alph">Alphabet lowercase (a, b, c...)</option>
+                                        <option value="Alph">Alphabet uppercase (A, B, C...)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="front_matter_enabled" id="front-matter-toggle">
+                                    <span>Different numbering for front matter (preface, TOC)</span>
+                                </label>
+                                <div id="front-matter-style" style="display: none; margin-top: 10px; margin-left: 20px;">
+                                    <label for="front-matter-number-style">Front Matter Style</label>
+                                    <select id="front-matter-number-style" name="front_matter_style">
+                                        <option value="roman" selected>Roman lowercase (i, ii, iii...)</option>
+                                        <option value="Roman">Roman uppercase (I, II, III...)</option>
+                                        <option value="arabic">Arabic (1, 2, 3...)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </details>
 
                     <!-- Action Buttons -->
@@ -136,9 +209,28 @@
     <script>
         // File drop zone handling
         const dropZone = document.getElementById('file-drop-zone');
+        const folderDropZone = document.getElementById('folder-drop-zone');
         const fileInput = document.getElementById('file-input');
+        const folderInput = document.getElementById('folder-input');
         const fileList = document.getElementById('file-list');
 
+        let currentMode = 'files';
+
+        // Switch between file and folder upload modes
+        function switchUploadMode(mode) {
+            currentMode = mode;
+            if (mode === 'files') {
+                dropZone.style.display = 'block';
+                folderDropZone.style.display = 'none';
+                fileList.innerHTML = '';
+            } else {
+                dropZone.style.display = 'none';
+                folderDropZone.style.display = 'block';
+                fileList.innerHTML = '';
+            }
+        }
+
+        // File mode handlers
         dropZone.addEventListener('click', () => fileInput.click());
 
         dropZone.addEventListener('dragover', (e) => {
@@ -159,6 +251,11 @@
 
         fileInput.addEventListener('change', displayFiles);
 
+        // Folder mode handlers
+        folderDropZone.addEventListener('click', () => folderInput.click());
+
+        folderInput.addEventListener('change', displayFolderFiles);
+
         function displayFiles() {
             fileList.innerHTML = '';
             const files = fileInput.files;
@@ -174,6 +271,45 @@
                     <button type="button" class="btn-remove" onclick="removeFile(${i})">×</button>
                 `;
                 fileList.appendChild(fileItem);
+            }
+        }
+
+        function displayFolderFiles() {
+            fileList.innerHTML = '';
+            const files = folderInput.files;
+
+            if (files.length === 0) return;
+
+            // Group files by folder
+            const folders = {};
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const pathParts = file.webkitRelativePath.split('/');
+
+                if (pathParts.length > 1) {
+                    const folder = pathParts[pathParts.length - 2];
+                    if (!folders[folder]) folders[folder] = [];
+                    folders[folder].push(file);
+                }
+            }
+
+            // Display folder structure
+            for (const [folder, folderFiles] of Object.entries(folders)) {
+                const folderHeader = document.createElement('div');
+                folderHeader.style.cssText = 'font-weight: bold; margin-top: 10px; color: #374151;';
+                folderHeader.textContent = `${folder}/ (${folderFiles.length} files)`;
+                fileList.appendChild(folderHeader);
+
+                folderFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.style.marginLeft = '20px';
+                    fileItem.innerHTML = `
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
             }
         }
 
@@ -196,11 +332,69 @@
             document.getElementById('results-section').style.display = 'none';
         }
 
+        // Toggle page numbering options visibility
+        function togglePageNumberingOptions() {
+            const enabled = document.getElementById('page-numbering-toggle').checked;
+            const options = document.getElementById('page-numbering-options');
+            options.style.display = enabled ? 'block' : 'none';
+        }
+
+        // Toggle front matter style selector
+        document.getElementById('front-matter-toggle').addEventListener('change', function() {
+            const styleDiv = document.getElementById('front-matter-style');
+            styleDiv.style.display = this.checked ? 'block' : 'none';
+        });
+
         // Form submission
         document.getElementById('convert-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(e.target);
+            const formData = new FormData();
+
+            // Add files based on mode
+            if (currentMode === 'files') {
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    showError('Please select at least one file');
+                    return;
+                }
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i]);
+                }
+            } else {
+                const files = folderInput.files;
+                if (files.length === 0) {
+                    showError('Please select a folder');
+                    return;
+                }
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i], files[i].webkitRelativePath);
+                }
+                formData.append('is_folder', 'true');
+            }
+
+            // Add metadata
+            formData.append('title', document.getElementById('title').value);
+            formData.append('author', document.getElementById('author').value);
+            formData.append('subtitle', document.getElementById('subtitle').value);
+
+            // Add selected formats
+            const formatCheckboxes = document.querySelectorAll('input[name="formats"]:checked');
+            formatCheckboxes.forEach(checkbox => {
+                formData.append('formats', checkbox.value);
+            });
+
+            // Add page numbering configuration
+            if (document.getElementById('page-numbering-toggle').checked) {
+                formData.append('page_numbering_enabled', 'true');
+                formData.append('page_number_position', document.getElementById('page-number-position').value);
+                formData.append('page_number_style', document.getElementById('page-number-style').value);
+
+                if (document.getElementById('front-matter-toggle').checked) {
+                    formData.append('front_matter_enabled', 'true');
+                    formData.append('front_matter_style', document.getElementById('front-matter-number-style').value);
+                }
+            }
 
             // Show progress
             document.getElementById('progress-section').style.display = 'block';
