@@ -11,15 +11,17 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
 from .text_normalizer import TextNormalizer
+from .page_numbering import PageNumberingConfig
 
 
 class EBookConverter:
     """Main e-book conversion class"""
 
-    def __init__(self):
+    def __init__(self, page_numbering_config: Optional[Dict] = None):
         self.text_normalizer = TextNormalizer()
         self.supported_formats = ['epub', 'pdf', 'html', 'docx', 'md']
         self.pdf_engines = ['wkhtmltopdf', 'pdflatex', 'weasyprint']
+        self.page_numbering = PageNumberingConfig(page_numbering_config)
 
     def check_dependencies(self) -> Dict[str, bool]:
         """Check if required tools are installed"""
@@ -132,7 +134,8 @@ class EBookConverter:
 
         return '\n'.join(result)
 
-    def create_metadata(self, title: str, author: str, subtitle: str = '') -> str:
+    def create_metadata(self, title: str, author: str, subtitle: str = '',
+                        has_frontmatter: bool = False) -> str:
         """Create YAML front matter for pandoc"""
         metadata = [
             '---',
@@ -147,6 +150,22 @@ class EBookConverter:
             f'date: "{datetime.now().strftime("%Y-%m-%d")}"',
             'toc: true',
             'toc-depth: 3',
+        ])
+
+        # Add page numbering configuration for PDF
+        if self.page_numbering.config['enabled']:
+            # For book-style front matter
+            if has_frontmatter:
+                metadata.append('documentclass: book')
+
+            # Add LaTeX header includes
+            latex_header = self.page_numbering.generate_latex_header()
+            if latex_header:
+                metadata.append('header-includes: |')
+                for line in latex_header.split('\n'):
+                    metadata.append(f'  {line}')
+
+        metadata.extend([
             '---',
             ''
         ])
@@ -291,7 +310,7 @@ class EBookConverter:
             return False
 
     def convert_to_docx(self, content: str, output_path: Path, title: str, author: str) -> bool:
-        """Convert content to DOCX format"""
+        """Convert content to DOCX format with page numbering support"""
         try:
             # Create temporary file with content
             temp_file = output_path.parent / f'temp_{output_path.stem}.md'
@@ -310,6 +329,11 @@ class EBookConverter:
                 f'--metadata=title:{title}',
                 f'--metadata=author:{author}',
             ]
+
+            # Add reference document if available for page numbering
+            ref_doc = self.page_numbering.get_reference_doc_path()
+            if ref_doc:
+                cmd.extend(['--reference-doc', str(ref_doc)])
 
             result = subprocess.run(cmd, capture_output=True, text=True)
 
