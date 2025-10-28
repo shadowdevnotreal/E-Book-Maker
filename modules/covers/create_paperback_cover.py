@@ -117,8 +117,12 @@ def create_paperback_cover():
     paperback.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
     img_buffer.seek(0)
 
+    # Create ImageReader for reportlab compatibility
+    from reportlab.lib.utils import ImageReader
+    img_reader = ImageReader(img_buffer)
+
     # Draw image to fill entire page
-    c.drawImage(img_buffer, 0, 0, width=width_inches * inch, height=height_inches * inch, preserveAspectRatio=False)
+    c.drawImage(img_reader, 0, 0, width=width_inches * inch, height=height_inches * inch, preserveAspectRatio=False)
     c.save()
 
     file_size = os.path.getsize(output_file) / 1024

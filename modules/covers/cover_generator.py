@@ -227,6 +227,7 @@ class CoverGenerator:
         """
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
+        from reportlab.lib.utils import ImageReader
         import io
 
         # Ensure RGB mode
@@ -250,9 +251,12 @@ class CoverGenerator:
         img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
         img_buffer.seek(0)
 
+        # Create ImageReader for reportlab compatibility
+        img_reader = ImageReader(img_buffer)
+
         # Draw image to fill entire page (no margins, exact fit)
         c.drawImage(
-            img_buffer,
+            img_reader,
             0, 0,
             width=width_inches * inch,
             height=height_inches * inch,

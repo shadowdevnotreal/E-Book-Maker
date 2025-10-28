@@ -100,6 +100,8 @@ def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover"):
         dpi: Resolution in DPI (300 for KDP)
         title: PDF document title
     """
+    from reportlab.lib.utils import ImageReader
+
     # Ensure RGB mode
     if img.mode != 'RGB':
         img = img.convert('RGB')
@@ -121,9 +123,12 @@ def save_cover_as_pdf(img, output_path, dpi=300, title="Book Cover"):
     img.save(img_buffer, format='JPEG', quality=95, dpi=(dpi, dpi), optimize=True)
     img_buffer.seek(0)
 
+    # Create ImageReader for reportlab compatibility
+    img_reader = ImageReader(img_buffer)
+
     # Draw image to fill entire page (no margins, exact fit)
     c.drawImage(
-        img_buffer,
+        img_reader,
         0, 0,
         width=width_inches * inch,
         height=height_inches * inch,
