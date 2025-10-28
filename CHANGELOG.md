@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] - 2025-10-28
 
+### Fixed
+
+#### 🖼️ Cover Conversion UI Enhancement
+- **Added missing text overlay controls** to Convert Cover form
+  - Title input field for spine text
+  - Author input field for spine text
+  - Subtitle input field (optional)
+  - "Add Text Overlay" checkbox with toggle functionality
+  - "Add Barcode Safe Area" checkbox for KDP compliance
+  - Backend already supported these features; UI now exposes them
+  - Enables custom spine text when converting uploaded covers
+
 ### Added - Professional Publishing Features
 
 #### 📄 Document Conversion Enhancements

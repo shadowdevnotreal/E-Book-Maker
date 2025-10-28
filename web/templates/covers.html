@@ -105,9 +105,9 @@
                             <div class="drop-zone-content">
                                 <span class="drop-icon">🖼️</span>
                                 <p>Drag & drop cover image here or click to browse</p>
-                                <p class="file-info">Supports: PNG, JPG, JPEG</p>
+                                <p class="file-info">Supports: PDF, PNG, JPG, JPEG</p>
                             </div>
-                            <input type="file" id="cover-input" name="file" accept=".png,.jpg,.jpeg" style="display: none;">
+                            <input type="file" id="cover-input" name="file" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
                         </div>
                         <div id="cover-preview-upload" class="preview-container" style="display: none;">
                             <img id="uploaded-cover-preview" src="" alt="Uploaded Cover">
@@ -121,6 +121,37 @@
                             <option value="paperback">Paperback with Spine</option>
                             <option value="hardback">Hardback with Dust Jacket</option>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="convert-add-text" name="add_text" checked>
+                            Add Text Overlay (for spine text on paperback/hardback)
+                        </label>
+                    </div>
+
+                    <div id="convert-text-fields" class="form-section">
+                        <div class="form-group">
+                            <label for="convert-title">Book Title (for spine text)</label>
+                            <input type="text" id="convert-title" name="title" placeholder="Enter book title">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="convert-author">Author (for spine text)</label>
+                            <input type="text" id="convert-author" name="author" placeholder="Enter author name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="convert-subtitle">Subtitle (optional)</label>
+                            <input type="text" id="convert-subtitle" name="subtitle" placeholder="Enter subtitle (optional)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="convert-add-barcode" name="add_barcode" checked>
+                            Add Barcode Safe Area (KDP 2.0" × 1.2" white box on back cover)
+                        </label>
                     </div>
 
                     <div class="button-group">
@@ -227,6 +258,14 @@
                 reader.readAsDataURL(file);
             }
         }
+
+        // Toggle text overlay fields based on checkbox
+        const convertAddTextCheckbox = document.getElementById('convert-add-text');
+        const convertTextFields = document.getElementById('convert-text-fields');
+
+        convertAddTextCheckbox.addEventListener('change', () => {
+            convertTextFields.style.display = convertAddTextCheckbox.checked ? 'block' : 'none';
+        });
 
         // Convert cover form submission
         document.getElementById('convert-cover-form').addEventListener('submit', async (e) => {
