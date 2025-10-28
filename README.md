@@ -155,9 +155,7 @@ Point & Click           CLI Tools Available     Production Ready
 
 ### 📦 **Installation**
 
-#### **Windows Users - Easy Setup!** 🪟
-
-All installers included in `setup/` folder - no searching required!
+#### **Windows Users** 🪟
 
 **Step 1: Install Python**
 ```batch
@@ -165,36 +163,21 @@ All installers included in `setup/` folder - no searching required!
 # Make sure to check "Add Python to PATH" during installation
 ```
 
-**Step 2: Install Tools** (all installers in `setup/` folder)
+**Step 2: Install Required Tools**
+Download and install these tools (they'll be added to your PATH automatically):
+- **Pandoc** (Required): https://pandoc.org/installing.html
+- **wkhtmltopdf** (Recommended): https://wkhtmltopdf.org/downloads.html
+- **MiKTeX** (Optional, ~500MB): https://miktex.org/download
+
+**Step 3: Verify Installation**
 ```batch
-# Required - Document conversion engine
-setup/pandoc-3.8.2.1-windows-x86_64.msi
-
-# Recommended - Better PDF generation
-setup/wkhtmltox-0.12.6-1.msvc2015-win64.exe
-
-# Optional - Advanced PDF formatting (~500MB)
-setup/basic-miktex-24.1-x64.exe
+# Check that tools are accessible
+python --version
+pandoc --version
+wkhtmltopdf --version
 ```
 
-**Step 3: Auto-Configure PATH**
-```batch
-# Navigate to setup folder and run as Administrator
-setup/SETUP-WINDOWS.bat
-
-# Click "Yes" for Administrator permission
-# Restart your terminal after completion
-```
-
-**Step 4: Verify Installation**
-```batch
-# Check everything is working
-setup/VERIFY-SETUP.bat
-
-# All tools should show [OK]
-```
-
-📖 **Detailed Windows Instructions:** See [setup/README.md](setup/README.md)
+💡 **Note:** Setup installers are available in [GitHub Releases](https://github.com/shadowdevnotreal/E-Book-Maker/releases)
 
 #### **macOS Installation**
 
@@ -262,6 +245,7 @@ E-Book-Maker/
 ├── check_install.py           # Dependency verification tool
 ├── test_kdp_compliance.py     # KDP compliance test suite (30 tests)
 ├── requirements.txt           # Python dependencies
+├── E-Book-Maker.png          # Project banner
 │
 ├── modules/                   # Core functionality (modular design)
 │   ├── kdp_calculator.py     # 🆕 Amazon KDP calculator module
@@ -305,12 +289,6 @@ E-Book-Maker/
 │   ├── default_config.json  # 🆕 KDP specs (trim sizes, margins, formulas)
 │   └── templates/           # Pandoc templates
 │
-├── setup/                    # Windows installers & setup scripts
-│   ├── SETUP-WINDOWS.bat    # PATH configuration
-│   ├── VERIFY-SETUP.bat     # Installation checker
-│   ├── README.md            # Setup documentation
-│   └── [installers]         # Pandoc, wkhtmltopdf, MiKTeX
-│
 ├── docs/                     # Comprehensive documentation
 │   ├── KDP_COMPLIANCE_TEST_REPORT.md  # Full test results
 │   ├── TEST_REPORT.md                 # Feature testing
@@ -324,23 +302,20 @@ E-Book-Maker/
 │   ├── logos/               # Watermark logos (gitignored)
 │   └── styles/              # Style templates
 │
-├── output/                   # Generated outputs (gitignored)
-│   ├── ebooks/              # Final e-books (EPUB, PDF, HTML, DOCX, MD)
-│   ├── covers/              # Final covers
-│   ├── watermarked/         # Watermarked documents
-│   ├── uploads/             # Temporary uploads
-│   ├── test_covers/         # Cover test outputs
-│   ├── test_results/        # Test outputs (verification)
-│   └── sample_files/        # Sample files for testing
-│
-└── test_files/              # Testing samples & examples
-    ├── chapters/            # Sample book chapters
-    ├── appendices/          # Sample appendices
-    ├── input/               # Sample input files (various formats)
-    └── output/              # Expected test outputs
+└── output/                   # Generated outputs (gitignored)
+    ├── ebooks/              # Final e-books (EPUB, PDF, HTML, DOCX, MD)
+    ├── covers/              # Final covers
+    ├── watermarked/         # Watermarked documents
+    ├── uploads/             # Temporary uploads
+    ├── test_covers/         # Cover test outputs
+    ├── test_results/        # Test outputs (verification)
+    └── sample_files/        # 📁 Example files for testing
+        ├── chapters/        # Sample book chapters (4 MD files)
+        ├── appendices/      # Sample appendices (3 MD files)
+        └── [sample inputs]  # DOCX, EPUB, HTML, MD, ODT, RTF, TEX, images
 
-Note: Virtual environment (venv/), cache (__pycache__), and user content
-are excluded from git repository via .gitignore
+Note: Virtual environment (venv/), Python cache (__pycache__), and generated
+outputs are excluded from git repository via .gitignore
 ```
 
 </details>
