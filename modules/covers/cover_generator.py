@@ -13,9 +13,9 @@ class CoverGenerator:
     """Generate and convert book covers"""
 
     # E-book cover specifications (Amazon KDP compliant)
-    # KDP recommends: 1600 × 2560 pixels (portrait, aspect ratio 1.6:1)
-    EBOOK_WIDTH = 1600  # CORRECTED: Was 2560 (landscape), now portrait
-    EBOOK_HEIGHT = 2560  # CORRECTED: Was 1600 (landscape), now portrait
+    # KDP requires: 1600 × 2560 pixels (portrait orientation, 1.6:1 aspect ratio)
+    EBOOK_WIDTH = 1600  # Portrait width
+    EBOOK_HEIGHT = 2560  # Portrait height
     EBOOK_DPI = 300
 
     # Paperback specifications (6" x 9" book, ~100 pages)
@@ -175,6 +175,32 @@ class CoverGenerator:
         hex_color = hex_color.lstrip('#')
         return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
+    def save_optimized_jpeg(self, img: Image.Image, output_path: Path,
+                           dpi: int = 300, quality: int = 95) -> None:
+        """
+        Save image as optimized JPEG with best practices
+
+        Args:
+            img: PIL Image to save
+            output_path: Path to save to
+            dpi: Resolution in DPI
+            quality: JPEG quality (1-100)
+        """
+        # Ensure RGB mode
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Save with optimized settings
+        img.save(
+            str(output_path),
+            'JPEG',
+            quality=quality,
+            dpi=(dpi, dpi),
+            optimize=True,
+            progressive=True,
+            subsampling=0  # 4:4:4 for best quality
+        )
+
     def create_cover(self, cover_type: str, title: str, subtitle: str,
                     author: str, style: str, colors: Dict[str, str],
                     output_dir: Path) -> Path:
@@ -273,19 +299,29 @@ class CoverGenerator:
         output_filename = f"{cover_type}_cover_{title.lower().replace(' ', '_')}.jpg"
         output_path = output_dir / output_filename
 
-        img.save(str(output_path), 'JPEG', quality=95, dpi=(dpi, dpi))
+        self.save_optimized_jpeg(img, output_path, dpi=dpi, quality=95)
 
         return output_path
 
     def convert_cover(self, input_file: Path, target_type: str,
-                     output_dir: Path) -> Path:
+                     output_dir: Path, title: str = '', subtitle: str = '',
+                     author: str = '', add_text: bool = True,
+                     title_color: str = '#FFFFFF', spine_color: str = '#FF6B35',
+                     title_position: str = 'top') -> Path:
         """
-        Convert cover image to target format
+        Convert cover image to target format with optional text overlay
 
         Args:
             input_file: Path to input cover image
             target_type: 'ebook', 'paperback', or 'hardback'
             output_dir: Output directory
+            title: Book title (optional, will add overlay if provided)
+            subtitle: Book subtitle (optional)
+            author: Author name (optional)
+            add_text: Whether to add text overlays (default: True if title provided)
+            title_color: Hex color for title text (default: white)
+            spine_color: Hex color for spine background band (default: orange)
+            title_position: 'top', 'center', or 'bottom' (default: 'top')
 
         Returns:
             Path to converted cover
@@ -315,8 +351,34 @@ class CoverGenerator:
             target_size = (self.PAPERBACK_WIDTH, self.PAPERBACK_HEIGHT)
             dpi = self.PAPERBACK_DPI
 
-        # Resize image
-        img_resized = img.resize(target_size, Image.Resampling.LANCZOS)
+        # Resize image while maintaining aspect ratio for ebook only
+        # For paperback/hardback, we'll handle aspect ratio per section
+        if target_type == 'ebook':
+            # Create white background canvas
+            canvas = Image.new('RGB', target_size, (255, 255, 255))
+
+            # Calculate scaling to fit within target while maintaining aspect ratio
+            img_ratio = img.width / img.height
+            target_ratio = target_size[0] / target_size[1]
+
+            if img_ratio > target_ratio:
+                # Image is wider than target - fit to width
+                new_width = target_size[0]
+                new_height = int(new_width / img_ratio)
+            else:
+                # Image is taller than target - fit to height
+                new_height = target_size[1]
+                new_width = int(new_height * img_ratio)
+
+            # Resize image maintaining aspect ratio
+            img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+            # Center the resized image on the canvas
+            x_offset = (target_size[0] - new_width) // 2
+            y_offset = (target_size[1] - new_height) // 2
+            canvas.paste(img_resized, (x_offset, y_offset))
+
+            img_resized = canvas
 
         # For paperback, create wrap layout
         if target_type == 'paperback':
@@ -328,14 +390,45 @@ class CoverGenerator:
             front_width = back_width
             spine_width = self.PAPERBACK_SPINE_WIDTH
 
-            # Place front cover (resize source image)
-            front_cover = img.resize((front_width, target_size[1]), Image.Resampling.LANCZOS)
-            front_x = back_width + spine_width
-            wrap.paste(front_cover, (front_x, 0))
+            # Place front cover (resize source image maintaining aspect ratio)
+            # Create canvas for front cover
+            front_canvas = Image.new('RGB', (front_width, target_size[1]), (255, 255, 255))
+            img_ratio = img.width / img.height
+            front_ratio = front_width / target_size[1]
 
-            # Place back cover (resize source image)
-            back_cover = img.resize((back_width, target_size[1]), Image.Resampling.LANCZOS)
-            wrap.paste(back_cover, (0, 0))
+            if img_ratio > front_ratio:
+                new_width = front_width
+                new_height = int(new_width / img_ratio)
+            else:
+                new_height = target_size[1]
+                new_width = int(new_height * img_ratio)
+
+            front_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            front_x_offset = (front_width - new_width) // 2
+            front_y_offset = (target_size[1] - new_height) // 2
+            front_canvas.paste(front_resized, (front_x_offset, front_y_offset))
+
+            front_x = back_width + spine_width
+            wrap.paste(front_canvas, (front_x, 0))
+
+            # Place back cover (resize source image maintaining aspect ratio)
+            # Create canvas for back cover
+            back_canvas = Image.new('RGB', (back_width, target_size[1]), (255, 255, 255))
+            back_ratio = back_width / target_size[1]
+
+            if img_ratio > back_ratio:
+                new_width = back_width
+                new_height = int(new_width / img_ratio)
+            else:
+                new_height = target_size[1]
+                new_width = int(new_height * img_ratio)
+
+            back_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            back_x_offset = (back_width - new_width) // 2
+            back_y_offset = (target_size[1] - new_height) // 2
+            back_canvas.paste(back_resized, (back_x_offset, back_y_offset))
+
+            wrap.paste(back_canvas, (0, 0))
 
             img_resized = wrap
 
@@ -349,15 +442,46 @@ class CoverGenerator:
             spine_width = self.ALT_HARDBACK_SPINE_WIDTH
             cover_width = (target_size[0] - (2 * flap_width) - spine_width) // 2
 
-            # Place front cover (center-right)
-            front_cover = img.resize((cover_width, target_size[1]), Image.Resampling.LANCZOS)
-            front_x = flap_width + cover_width + spine_width
-            jacket.paste(front_cover, (front_x, 0))
+            # Place front cover (center-right) maintaining aspect ratio
+            # Create canvas for front cover
+            front_canvas = Image.new('RGB', (cover_width, target_size[1]), (255, 255, 255))
+            img_ratio = img.width / img.height
+            front_ratio = cover_width / target_size[1]
 
-            # Place back cover (center-left)
-            back_cover = img.resize((cover_width, target_size[1]), Image.Resampling.LANCZOS)
+            if img_ratio > front_ratio:
+                new_width = cover_width
+                new_height = int(new_width / img_ratio)
+            else:
+                new_height = target_size[1]
+                new_width = int(new_height * img_ratio)
+
+            front_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            front_x_offset = (cover_width - new_width) // 2
+            front_y_offset = (target_size[1] - new_height) // 2
+            front_canvas.paste(front_resized, (front_x_offset, front_y_offset))
+
+            front_x = flap_width + cover_width + spine_width
+            jacket.paste(front_canvas, (front_x, 0))
+
+            # Place back cover (center-left) maintaining aspect ratio
+            # Create canvas for back cover
+            back_canvas = Image.new('RGB', (cover_width, target_size[1]), (255, 255, 255))
+            back_ratio = cover_width / target_size[1]
+
+            if img_ratio > back_ratio:
+                new_width = cover_width
+                new_height = int(new_width / img_ratio)
+            else:
+                new_height = target_size[1]
+                new_width = int(new_height * img_ratio)
+
+            back_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            back_x_offset = (cover_width - new_width) // 2
+            back_y_offset = (target_size[1] - new_height) // 2
+            back_canvas.paste(back_resized, (back_x_offset, back_y_offset))
+
             back_x = flap_width
-            jacket.paste(back_cover, (back_x, 0))
+            jacket.paste(back_canvas, (back_x, 0))
 
             # Add text to flaps (optional - placeholder for now)
             draw = ImageDraw.Draw(jacket)
@@ -365,17 +489,183 @@ class CoverGenerator:
 
             img_resized = jacket
 
+        # Add text overlays if requested
+        if add_text and title:
+            img_resized = self._add_text_overlays(
+                img_resized, target_type, title, subtitle, author,
+                title_color, spine_color, title_position, target_size
+            )
+
         # Save converted cover
         input_stem = Path(input_file).stem
         output_filename = f"{target_type}_converted_{input_stem}.jpg"
         output_path = output_dir / output_filename
 
-        img_resized.save(str(output_path), 'JPEG', quality=95, dpi=(dpi, dpi))
+        self.save_optimized_jpeg(img_resized, output_path, dpi=dpi, quality=95)
 
         print(f"Original: {img.size} -> Converted: {img_resized.size}")
         print(f"Saved to: {output_path}")
 
         return output_path
+
+    def _add_text_overlays(self, img: Image.Image, cover_type: str,
+                          title: str, subtitle: str, author: str,
+                          title_color: str, spine_color: str,
+                          title_position: str, target_size: Tuple[int, int]) -> Image.Image:
+        """Add text overlays to cover image"""
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+
+        # Convert colors
+        text_rgb = self.hex_to_rgb(title_color)
+        spine_rgb = self.hex_to_rgb(spine_color)
+
+        # Font sizes based on cover type
+        if cover_type == 'ebook':
+            title_size = 120
+            subtitle_size = 80
+            author_size = 60
+        elif cover_type == 'hardback':
+            title_size = 140
+            subtitle_size = 100
+            author_size = 80
+        else:  # paperback
+            title_size = 130
+            subtitle_size = 90
+            author_size = 70
+
+        # Get fonts
+        title_font = self.get_font(title_size, bold=True)
+        subtitle_font = self.get_font(subtitle_size, bold=False)
+        author_font = self.get_font(author_size, bold=False)
+
+        # For paperback/hardback, calculate front cover area
+        if cover_type in ['paperback', 'hardback']:
+            if cover_type == 'paperback':
+                spine_width = self.PAPERBACK_SPINE_WIDTH
+                back_width = (width - spine_width) // 2
+                spine_x = back_width
+                front_x = back_width + spine_width
+                front_width = width - front_x
+            else:  # hardback
+                flap_width = self.ALT_HARDBACK_FLAP_WIDTH
+                spine_width = self.ALT_HARDBACK_SPINE_WIDTH
+                cover_width = (width - (2 * flap_width) - spine_width) // 2
+                back_width = cover_width  # For consistency with paperback
+                spine_x = flap_width + cover_width  # Start of spine section
+                front_x = flap_width + cover_width + spine_width
+                front_width = cover_width
+
+            # Add colored band for title (horizontal at top/center/bottom)
+            if title_position == 'top':
+                band_y = int(height * 0.1)
+                band_height = int(height * 0.15)
+            elif title_position == 'center':
+                band_y = int(height * 0.4)
+                band_height = int(height * 0.2)
+            else:  # bottom
+                band_y = int(height * 0.75)
+                band_height = int(height * 0.15)
+
+            # Draw semi-transparent colored band
+            overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            overlay_draw = ImageDraw.Draw(overlay)
+            overlay_draw.rectangle(
+                [front_x, band_y, front_x + front_width, band_y + band_height],
+                fill=(*spine_rgb, 200)  # Semi-transparent
+            )
+            img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # Draw title on band
+            title_bbox = draw.textbbox((0, 0), title, font=title_font)
+            title_width = title_bbox[2] - title_bbox[0]
+            title_x = front_x + (front_width - title_width) // 2
+            title_y = band_y + (band_height - (title_bbox[3] - title_bbox[1])) // 2
+            draw.text((title_x, title_y), title, fill=text_rgb, font=title_font)
+
+            # Draw subtitle if provided (below title band)
+            if subtitle:
+                subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
+                subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
+                subtitle_x = front_x + (front_width - subtitle_width) // 2
+                subtitle_y = band_y + band_height + 30
+
+                # Add semi-transparent background for subtitle
+                overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
+                overlay_draw = ImageDraw.Draw(overlay)
+                overlay_draw.rectangle(
+                    [subtitle_x - 20, subtitle_y - 10,
+                     subtitle_x + subtitle_width + 20, subtitle_y + (subtitle_bbox[3] - subtitle_bbox[1]) + 10],
+                    fill=(0, 0, 0, 150)
+                )
+                img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+                draw = ImageDraw.Draw(img)
+
+                draw.text((subtitle_x, subtitle_y), subtitle, fill=text_rgb, font=subtitle_font)
+
+            # Add spine text (vertical)
+            if author and cover_type in ['paperback', 'hardback']:
+                spine_font = self.get_font(45, bold=True)
+                spine_text = f"{title[:30]}  •  {author}"
+
+                # Create vertical spine text
+                spine_img = Image.new('RGBA', (height, spine_width), (0, 0, 0, 0))
+                spine_draw = ImageDraw.Draw(spine_img)
+
+                # Add background to spine
+                spine_draw.rectangle([0, 0, height, spine_width], fill=(*spine_rgb, 255))
+
+                # Draw spine text
+                spine_draw.text((height // 4, spine_width // 2 - 20), spine_text, fill=text_rgb, font=spine_font)
+
+                # Rotate and paste spine
+                spine_img = spine_img.rotate(90, expand=True)
+                img.paste(spine_img, (spine_x, 0), spine_img)
+
+        else:  # ebook - simpler layout
+            # Add title
+            title_bbox = draw.textbbox((0, 0), title, font=title_font)
+            title_width = title_bbox[2] - title_bbox[0]
+            title_height = title_bbox[3] - title_bbox[1]
+            title_x = (width - title_width) // 2
+
+            if title_position == 'top':
+                title_y = int(height * 0.15)
+            elif title_position == 'center':
+                title_y = (height - title_height) // 2
+            else:  # bottom
+                title_y = int(height * 0.75)
+
+            # Add background rectangle for text
+            overlay = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            overlay_draw = ImageDraw.Draw(overlay)
+            overlay_draw.rectangle(
+                [title_x - 40, title_y - 30, title_x + title_width + 40, title_y + title_height + 30],
+                fill=(*spine_rgb, 200)
+            )
+            img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            draw.text((title_x, title_y), title, fill=text_rgb, font=title_font)
+
+            # Add subtitle if provided
+            if subtitle:
+                subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
+                subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
+                subtitle_x = (width - subtitle_width) // 2
+                subtitle_y = title_y + title_height + 50
+                draw.text((subtitle_x, subtitle_y), subtitle, fill=text_rgb, font=subtitle_font)
+
+            # Add author
+            if author:
+                author_bbox = draw.textbbox((0, 0), author, font=author_font)
+                author_width = author_bbox[2] - author_bbox[0]
+                author_x = (width - author_width) // 2
+                author_y = height - 200
+                draw.text((author_x, author_y), author, fill=text_rgb, font=author_font)
+
+        return img
 
 
 if __name__ == '__main__':

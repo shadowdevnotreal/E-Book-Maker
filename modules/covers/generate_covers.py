@@ -8,10 +8,10 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 def create_ebook_cover():
-    """Create e-book cover (2560 x 1600 px)"""
+    """Create e-book cover (1600 x 2560 px - portrait)"""
 
     # Create image
-    width, height = 2560, 1600
+    width, height = 1600, 2560
     img = Image.new('RGB', (width, height), color='white')
     draw = ImageDraw.Draw(img)
 
@@ -85,17 +85,56 @@ def create_ebook_cover():
 
     return img
 
-def create_paperback_cover():
-    """Create paperback cover (6x9 + spine + back)"""
+def calculate_spine_width(page_count, paper_type='white', binding_type='paperback'):
+    """
+    Calculate spine width based on Amazon KDP specifications
+
+    Args:
+        page_count: Number of pages in the book
+        paper_type: 'white', 'cream', or 'color'
+        binding_type: 'paperback' or 'hardcover'
+
+    Returns:
+        Spine width in inches
+    """
+    # KDP spine width calculations (inches per page)
+    paper_thickness = {
+        'white': 0.0025,      # White paper: 0.0025" per page
+        'cream': 0.0027,      # Cream paper: 0.0027" per page
+        'color': 0.0025,      # Color paper: 0.0025" per page
+    }
+
+    thickness_per_page = paper_thickness.get(paper_type.lower(), 0.0025)
+    spine_width = page_count * thickness_per_page
+
+    # Hardcover boards add thickness
+    if binding_type == 'hardcover':
+        spine_width += 0.25  # Add 0.25" for hardcover boards
+
+    return spine_width
+
+def create_paperback_cover(page_count=100, paper_type='white'):
+    """
+    Create paperback cover (6x9 + spine + back)
+
+    Args:
+        page_count: Number of pages in the book (default: 100)
+        paper_type: Paper type - 'white', 'cream', or 'color' (default: 'white')
+    """
 
     # Paperback specs for 6x9 book
     # Front: 6 x 9 inches = 1800 x 2700 px at 300 DPI
-    # Spine: depends on page count (assume 100 pages = ~0.22 inches = 66 px)
-    # Back: 6 x 9 inches = 1800 x 2700 px
-    # Total width: 1800 + 66 + 1800 = 3666 px
-    # Height: 2700 px
+    # Back: 6 x 9 inches = 1800 x 2700 px at 300 DPI
+    # Spine: calculated based on page count and paper type
 
-    width, height = 3666, 2700
+    # Calculate spine width dynamically
+    spine_width_inches = calculate_spine_width(page_count, paper_type, 'paperback')
+    spine_width_px = int(spine_width_inches * 300)  # Convert to pixels at 300 DPI
+
+    # Total width: back (1800) + spine (calculated) + front (1800)
+    width = 1800 + spine_width_px + 1800
+    height = 2700
+
     img = Image.new('RGB', (width, height), color='white')
     draw = ImageDraw.Draw(img)
 
@@ -123,7 +162,7 @@ def create_paperback_cover():
         back_font = ImageFont.load_default()
 
     # FRONT COVER (right side)
-    front_x = 1866  # spine + back
+    front_x = 1800 + spine_width_px  # back + spine
 
     # Draw title on front
     title = "IT CAREER"
@@ -181,11 +220,13 @@ def create_paperback_cover():
     # SPINE
     spine_text = "IT CAREER BLUEPRINT INTERACTIVE WORKBOOK  •  Diatasso™ PRCM™"
     # Rotate and draw on spine (vertical text)
-    spine_img = Image.new('RGBA', (2700, 66), color=(102, 126, 234, 0))
+    spine_img = Image.new('RGBA', (2700, spine_width_px), color=(102, 126, 234, 0))
     spine_draw = ImageDraw.Draw(spine_img)
-    spine_draw.text((100, 8), spine_text, fill='white', font=spine_font)
+    # Center text vertically on spine
+    spine_text_y = max(8, (spine_width_px - 50) // 2)  # Adjust text position based on spine width
+    spine_draw.text((100, spine_text_y), spine_text, fill='white', font=spine_font)
     spine_img = spine_img.rotate(90, expand=True)
-    # Paste spine
+    # Paste spine at the correct position
     img.paste(spine_img, (1800, 0), spine_img)
 
     # BACK COVER (left side)
@@ -231,21 +272,31 @@ def main():
     output_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Generate e-book cover
-    print("Creating e-book cover (2560 x 1600 px)...")
+    print("Creating e-book cover (1600 x 2560 px - portrait)...")
     ebook_cover = create_ebook_cover()
     ebook_path = os.path.join(output_dir, "ebook_cover.jpg")
     ebook_cover.save(ebook_path, "JPEG", quality=95, dpi=(300, 300))
     print(f"✅ E-book cover saved: {ebook_path}")
-    print(f"   Size: {ebook_cover.size}")
+    print(f"   Size: {ebook_cover.size[0]} x {ebook_cover.size[1]} px (portrait)")
+    print(f"   Dimensions: 1600 x 2560 px @ 300 DPI")
     print()
 
-    # Generate paperback cover
-    print("Creating paperback cover (3666 x 2700 px)...")
-    paperback_cover = create_paperback_cover()
+    # Generate paperback cover with default settings
+    page_count = 100
+    paper_type = 'white'
+    print(f"Creating paperback cover (6x9 inch, {page_count} pages, {paper_type} paper)...")
+    paperback_cover = create_paperback_cover(page_count=page_count, paper_type=paper_type)
+
+    # Calculate spine width for display
+    spine_width_inches = calculate_spine_width(page_count, paper_type, 'paperback')
+    spine_width_px = int(spine_width_inches * 300)
+
     paperback_path = os.path.join(output_dir, "paperback_cover.jpg")
     paperback_cover.save(paperback_path, "JPEG", quality=95, dpi=(300, 300))
     print(f"✅ Paperback cover saved: {paperback_path}")
-    print(f"   Size: {paperback_cover.size}")
+    print(f"   Size: {paperback_cover.size[0]} x {paperback_cover.size[1]} px")
+    print(f"   Layout: Back (1800px) + Spine ({spine_width_px}px / {spine_width_inches:.4f}in) + Front (1800px)")
+    print(f"   Spine calculation: {page_count} pages × 0.0025 in/page = {spine_width_inches:.4f} inches")
     print()
 
     print("="*60)

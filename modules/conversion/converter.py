@@ -86,7 +86,51 @@ class EBookConverter:
 
     def normalize_content(self, content: str) -> str:
         """Normalize text encoding and formatting"""
-        return self.text_normalizer.normalize_text(content)
+        content = self.text_normalizer.normalize_text(content)
+        # Add blank lines before lists that follow other content (for proper markdown)
+        content = self._ensure_blank_before_lists(content)
+        return content
+
+    def _ensure_blank_before_lists(self, content: str) -> str:
+        """Ensure blank lines before list items for proper markdown parsing"""
+        import re
+
+        # Pattern: non-empty line followed immediately by bullet/numbered list
+        # This adds a blank line before lists that don't already have one
+        lines = content.split('\n')
+        result = []
+
+        for i, line in enumerate(lines):
+            result.append(line)
+
+            # Check if next line is a list item and current line is not blank
+            if i < len(lines) - 1:
+                current_stripped = line.strip()
+                next_line = lines[i + 1].strip()
+
+                # Check if next line is a list item
+                next_is_list = (
+                    next_line.startswith('- ') or
+                    next_line.startswith('* ') or
+                    re.match(r'^\d+\.\s', next_line)
+                )
+
+                # Check if current line is also a list item
+                current_is_list = (
+                    current_stripped.startswith('- ') or
+                    current_stripped.startswith('* ') or
+                    re.match(r'^\d+\.\s', current_stripped)
+                )
+
+                # If current line has content, next line is a list, and current is not a list
+                if (current_stripped and
+                    not current_stripped.startswith('#') and  # Not a header
+                    not current_is_list and  # Current line is not a list item
+                    next_is_list):  # Next line is a list item
+                    # Add blank line before the list
+                    result.append('')
+
+        return '\n'.join(result)
 
     def create_metadata(self, title: str, author: str, subtitle: str = '') -> str:
         """Create YAML front matter for pandoc"""
@@ -118,9 +162,10 @@ class EBookConverter:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            # Run pandoc
+            # Run pandoc with proper markdown reading options
             cmd = [
                 'pandoc',
+                '-f', 'markdown+definition_lists+fancy_lists+startnum',
                 str(temp_file),
                 '-o', str(output_path),
                 '--toc',
@@ -165,9 +210,10 @@ class EBookConverter:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            # Run pandoc with PDF engine
+            # Run pandoc with PDF engine and proper markdown reading
             cmd = [
                 'pandoc',
+                '-f', 'markdown+definition_lists+fancy_lists+startnum',
                 str(temp_file),
                 '-o', str(output_path),
                 '--toc',
@@ -210,9 +256,10 @@ class EBookConverter:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            # Run pandoc
+            # Run pandoc with proper markdown reading
             cmd = [
                 'pandoc',
+                '-f', 'markdown+definition_lists+fancy_lists+startnum',
                 str(temp_file),
                 '-o', str(output_path),
                 '--standalone',
@@ -252,9 +299,10 @@ class EBookConverter:
             with open(temp_file, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-            # Run pandoc
+            # Run pandoc with proper markdown reading options
             cmd = [
                 'pandoc',
+                '-f', 'markdown+definition_lists+fancy_lists+startnum',
                 str(temp_file),
                 '-o', str(output_path),
                 '--toc',

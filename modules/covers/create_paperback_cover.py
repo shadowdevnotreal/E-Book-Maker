@@ -52,17 +52,46 @@ def create_paperback_cover():
     # Create new image with white background
     paperback = Image.new('RGB', (width_px, height_px), 'white')
 
-    # Resize original to fit front cover (2550 x 3375)
-    front_cover = original.resize((front_width, height_px), Image.Resampling.LANCZOS)
+    # Resize original to fit front cover (2550 x 3375) maintaining aspect ratio
+    # Create canvas for front cover
+    front_canvas = Image.new('RGB', (front_width, height_px), (255, 255, 255))
+    img_ratio = original.width / original.height
+    front_ratio = front_width / height_px
+
+    if img_ratio > front_ratio:
+        new_width = front_width
+        new_height = int(new_width / img_ratio)
+    else:
+        new_height = height_px
+        new_width = int(new_height * img_ratio)
+
+    front_resized = original.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    front_x_offset = (front_width - new_width) // 2
+    front_y_offset = (height_px - new_height) // 2
+    front_canvas.paste(front_resized, (front_x_offset, front_y_offset))
 
     # Paste front cover on the right side
     front_x = back_width + spine_width
-    paperback.paste(front_cover, (front_x, 0))
+    paperback.paste(front_canvas, (front_x, 0))
 
-    # Create back cover (mirror/resize original or use white space)
-    # For now, let's resize the original to fit back as well
-    back_cover = original.resize((back_width, height_px), Image.Resampling.LANCZOS)
-    paperback.paste(back_cover, (0, 0))
+    # Create back cover (mirror/resize original or use white space) maintaining aspect ratio
+    # Create canvas for back cover
+    back_canvas = Image.new('RGB', (back_width, height_px), (255, 255, 255))
+    back_ratio = back_width / height_px
+
+    if img_ratio > back_ratio:
+        new_width = back_width
+        new_height = int(new_width / img_ratio)
+    else:
+        new_height = height_px
+        new_width = int(new_height * img_ratio)
+
+    back_resized = original.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    back_x_offset = (back_width - new_width) // 2
+    back_y_offset = (height_px - new_height) // 2
+    back_canvas.paste(back_resized, (back_x_offset, back_y_offset))
+
+    paperback.paste(back_canvas, (0, 0))
 
     # Spine - keep simple white or very subtle
     # (Amazon will check that text doesn't go into spine safe zones)
