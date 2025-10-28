@@ -101,6 +101,39 @@
                         </div>
                     </div>
 
+                    <!-- Optional Background Image -->
+                    <div class="form-group">
+                        <label>Background Image (Optional)</label>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 8px;">Upload a PDF or image to use as the cover background. Leave empty for generated background.</p>
+                        <div class="file-drop-zone small" id="create-bg-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">🖼️</span>
+                                <p>Add background image/PDF</p>
+                            </div>
+                            <input type="file" id="create-bg-input" name="background" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                        </div>
+                        <div id="create-bg-preview" style="display: none; margin-top: 10px;">
+                            <span id="create-bg-filename" style="color: #374151; font-size: 0.875rem;"></span>
+                            <button type="button" class="btn-remove" onclick="removeCreateBackground()">Remove</button>
+                        </div>
+                    </div>
+
+                    <!-- Spine Text Options -->
+                    <div class="form-group" id="create-spine-options" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="create-add-spine-text" name="add_spine_text" checked>
+                            Add Spine Text (title and author on spine for paperback/hardback)
+                        </label>
+                    </div>
+
+                    <!-- Barcode Safe Area -->
+                    <div class="form-group" id="create-barcode-options" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="create-add-barcode" name="add_barcode" checked>
+                            Add Barcode Safe Area (KDP 2.0" × 1.2" white box on back cover)
+                        </label>
+                    </div>
+
                     <div class="button-group">
                         <button type="submit" class="btn btn-primary btn-large">Generate Cover</button>
                         <button type="button" class="btn btn-secondary" onclick="resetCoverForm()">Reset</button>
@@ -209,28 +242,80 @@
             });
         });
 
+        // Show/hide spine text and barcode options based on cover type
+        const coverTypeSelect = document.getElementById('cover-type');
+        const createSpineOptions = document.getElementById('create-spine-options');
+        const createBarcodeOptions = document.getElementById('create-barcode-options');
+
+        coverTypeSelect.addEventListener('change', () => {
+            const showOptions = (coverTypeSelect.value === 'paperback' || coverTypeSelect.value === 'hardback');
+            createSpineOptions.style.display = showOptions ? 'block' : 'none';
+            createBarcodeOptions.style.display = showOptions ? 'block' : 'none';
+        });
+
+        // Background image upload handling for Create tab
+        const createBgDropZone = document.getElementById('create-bg-drop-zone');
+        const createBgInput = document.getElementById('create-bg-input');
+        const createBgPreview = document.getElementById('create-bg-preview');
+        const createBgFilename = document.getElementById('create-bg-filename');
+
+        createBgDropZone.addEventListener('click', () => createBgInput.click());
+
+        createBgDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            createBgDropZone.classList.add('drag-over');
+        });
+
+        createBgDropZone.addEventListener('dragleave', () => {
+            createBgDropZone.classList.remove('drag-over');
+        });
+
+        createBgDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            createBgDropZone.classList.remove('drag-over');
+            createBgInput.files = e.dataTransfer.files;
+            previewCreateBackground();
+        });
+
+        createBgInput.addEventListener('change', previewCreateBackground);
+
+        function previewCreateBackground() {
+            const file = createBgInput.files[0];
+            if (file) {
+                createBgPreview.style.display = 'block';
+                createBgFilename.textContent = file.name;
+            }
+        }
+
+        function removeCreateBackground() {
+            createBgInput.value = '';
+            createBgPreview.style.display = 'none';
+            createBgFilename.textContent = '';
+        }
+
         // Create cover form submission
         document.getElementById('create-cover-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const formData = new FormData(e.target);
-            const data = {
-                type: formData.get('type'),
-                title: formData.get('title'),
-                subtitle: formData.get('subtitle'),
-                author: formData.get('author'),
-                style: formData.get('style'),
-                colors: {
-                    primary: formData.get('primary_color'),
-                    secondary: formData.get('secondary_color')
+
+            // Add checkbox values explicitly (they won't be in FormData if unchecked)
+            if (coverTypeSelect.value === 'paperback' || coverTypeSelect.value === 'hardback') {
+                const spineTextCheckbox = document.getElementById('create-add-spine-text');
+                const barcodeCheckbox = document.getElementById('create-add-barcode');
+
+                if (!spineTextCheckbox.checked) {
+                    formData.append('add_spine_text', 'false');
                 }
-            };
+                if (!barcodeCheckbox.checked) {
+                    formData.append('add_barcode', 'false');
+                }
+            }
 
             try {
                 const response = await fetch('/api/create-cover', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: formData
                 });
 
                 const result = await response.json();
@@ -325,6 +410,9 @@
         function resetCoverForm() {
             document.getElementById('create-cover-form').reset();
             document.getElementById('cover-preview').style.display = 'none';
+            removeCreateBackground();
+            createSpineOptions.style.display = 'none';
+            createBarcodeOptions.style.display = 'none';
         }
 
         function downloadCover() {
