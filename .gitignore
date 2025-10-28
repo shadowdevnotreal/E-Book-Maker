@@ -49,10 +49,11 @@ output/watermarked/*
 !output/covers/.gitkeep
 !output/watermarked/.gitkeep
 
-# Test results - keep for documentation purposes
-# output/test_results/
+# Test results - generated files (exclude from git)
+output/test_results/*
+!output/test_results/.gitkeep
 
-# Sample files - keep for testing
+# Sample files - keep for documentation/testing
 # output/sample_files/
 
 # Uploads (temporary user uploads)
