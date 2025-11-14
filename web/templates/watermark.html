@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watermark Documents - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Document Watermarking</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark" class="active">Watermark</a>
+            <a href="/marketing">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="ai-status-container">
+            <span class="ai-status-badge" id="nav-ai-status" style="display: none;">
+                🤖 AI ENABLED • Powered by Groq
+            </span>
+        </div>
+
+        <main class="watermark-page">
+            <h2>Add Watermark to Documents</h2>
+            <p>Protect your documents with custom text or logo watermarks.</p>
+
+            <form id="watermark-form" enctype="multipart/form-data">
+                <!-- Document Upload -->
+                <div class="form-group">
+                    <label>Upload Document</label>
+                    <div class="file-drop-zone" id="doc-drop-zone">
+                        <div class="drop-zone-content">
+                            <span class="drop-icon">📄</span>
+                            <p>Drag & drop document here or click to browse</p>
+                            <p class="file-info">Supports: PDF, HTML, DOCX, MD (Markdown)</p>
+                        </div>
+                        <input type="file" id="doc-input" name="file" accept=".pdf,.html,.htm,.docx,.md,.markdown" style="display: none;">
+                    </div>
+                    <div id="doc-file-info" class="file-info-display"></div>
+                </div>
+
+                <!-- Watermark Text -->
+                <div class="form-group">
+                    <label for="watermark-text">Watermark Text</label>
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <input type="text" id="watermark-text" name="text" placeholder="© 2025 Your Name. All Rights Reserved." value="© 2025 Watermarked Document. All Rights Reserved." style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="aiGenerateWatermarkText()" title="Get AI watermark suggestions">
+                            🤖 AI Generate
+                        </button>
+                    </div>
+                    <small>Leave empty to use logo only</small>
+                </div>
+
+                <!-- Logo Upload (Optional) -->
+                <div class="form-group">
+                    <label>Watermark Logo (Optional)</label>
+                    <div class="file-drop-zone small" id="logo-drop-zone">
+                        <div class="drop-zone-content">
+                            <span class="drop-icon">🖼️</span>
+                            <p>Add logo image</p>
+                        </div>
+                        <input type="file" id="logo-input" name="logo" accept=".png,.jpg,.jpeg" style="display: none;">
+                    </div>
+                    <div id="logo-preview" class="logo-preview" style="display: none;">
+                        <img id="logo-preview-img" src="" alt="Logo Preview">
+                        <button type="button" class="btn-remove" onclick="removeLogo()">Remove</button>
+                    </div>
+                </div>
+
+                <!-- Watermark Settings -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="opacity">Opacity: <span id="opacity-value">10%</span></label>
+                        <input type="range" id="opacity" name="opacity" min="1" max="50" value="10" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="position">Position</label>
+                        <select id="position" name="position">
+                            <option value="center">Center</option>
+                            <option value="top-left">Top Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="watermark-preview">
+                    <h3>Preview</h3>
+                    <div class="preview-box" id="watermark-preview-box">
+                        <div class="preview-watermark" id="preview-watermark">
+                            <img id="preview-logo" src="" alt="" style="display: none;">
+                            <span id="preview-text">© 2025 Watermarked Document. All Rights Reserved.</span>
+                        </div>
+                        <p class="preview-content">This is a preview of how your watermark will appear on the document.</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary btn-large">Apply Watermark</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetWatermarkForm()">Reset</button>
+                </div>
+            </form>
+
+            <!-- Results -->
+            <div id="watermark-results" class="results-section" style="display: none;">
+                <h3>Watermark Applied</h3>
+                <div id="watermark-results-content"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // Document upload handling
+        const docDropZone = document.getElementById('doc-drop-zone');
+        const docInput = document.getElementById('doc-input');
+
+        docDropZone.addEventListener('click', () => docInput.click());
+        setupDropZone(docDropZone, docInput, displayDocInfo);
+        docInput.addEventListener('change', displayDocInfo);
+
+        function displayDocInfo() {
+            const file = docInput.files[0];
+            if (file) {
+                document.getElementById('doc-file-info').innerHTML = `
+                    <div class="file-item">
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Logo upload handling
+        const logoDropZone = document.getElementById('logo-drop-zone');
+        const logoInput = document.getElementById('logo-input');
+
+        logoDropZone.addEventListener('click', () => logoInput.click());
+        setupDropZone(logoDropZone, logoInput, displayLogoPreview);
+        logoInput.addEventListener('change', displayLogoPreview);
+
+        function displayLogoPreview() {
+            const file = logoInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('logo-preview').style.display = 'flex';
+                    document.getElementById('logo-preview-img').src = e.target.result;
+                    document.getElementById('preview-logo').src = e.target.result;
+                    document.getElementById('preview-logo').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLogo() {
+            logoInput.value = '';
+            document.getElementById('logo-preview').style.display = 'none';
+            document.getElementById('preview-logo').style.display = 'none';
+        }
+
+        // Live preview updates
+        document.getElementById('watermark-text').addEventListener('input', (e) => {
+            document.getElementById('preview-text').textContent = e.target.value || 'No text';
+        });
+
+        document.getElementById('opacity').addEventListener('input', (e) => {
+            const opacity = e.target.value / 100;
+            document.getElementById('opacity-value').textContent = e.target.value + '%';
+            document.getElementById('preview-watermark').style.opacity = opacity;
+        });
+
+        document.getElementById('position').addEventListener('change', (e) => {
+            const previewBox = document.getElementById('watermark-preview-box');
+            const positions = {
+                'center': { justifyContent: 'center', alignItems: 'center' },
+                'top-left': { justifyContent: 'flex-start', alignItems: 'flex-start' },
+                'top-right': { justifyContent: 'flex-end', alignItems: 'flex-start' },
+                'bottom-left': { justifyContent: 'flex-start', alignItems: 'flex-end' },
+                'bottom-right': { justifyContent: 'flex-end', alignItems: 'flex-end' }
+            };
+
+            const pos = positions[e.target.value];
+            previewBox.style.justifyContent = pos.justifyContent;
+            previewBox.style.alignItems = pos.alignItems;
+        });
+
+        // Form submission
+        document.getElementById('watermark-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/api/watermark', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('watermark-results').style.display = 'block';
+                    document.getElementById('watermark-results-content').innerHTML = `
+                        <div class="success-message">
+                            <p>${result.message}</p>
+                        </div>
+                        <div class="download-item">
+                            <a href="/api/download/${result.file}" class="btn btn-primary" download>Download Watermarked Document</a>
+                        </div>
+                    `;
+                } else {
+                    alert('Error: ' + (result.error || 'Watermarking failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // AI Watermark Text Generation
+        function aiGenerateWatermarkText() {
+            const year = new Date().getFullYear();
+            const options = [
+                `© ${year} All Rights Reserved`,
+                `© ${year} Confidential Document`,
+                `© ${year} Do Not Copy or Distribute`,
+                `CONFIDENTIAL - © ${year}`,
+                `Property of [Your Name] © ${year}`,
+                `© ${year} [Your Company] - All Rights Reserved`
+            ];
+
+            const choice = prompt(
+                'Select a watermark style:\n\n' +
+                options.map((opt, i) => `${i + 1}. ${opt}`).join('\n') +
+                '\n\nEnter number (1-6), or type your custom text:',
+                '1'
+            );
+
+            if (!choice) return;
+
+            const index = parseInt(choice) - 1;
+            if (index >= 0 && index < options.length) {
+                // Use predefined option
+                document.getElementById('watermark-text').value = options[index];
+                document.getElementById('preview-text').textContent = options[index];
+            } else {
+                // Use custom text
+                document.getElementById('watermark-text').value = choice;
+                document.getElementById('preview-text').textContent = choice;
+            }
+
+            alert('✅ Watermark text updated! You can edit it in the text field.');
+        }
+
+        function resetWatermarkForm() {
+            document.getElementById('watermark-form').reset();
+            document.getElementById('doc-file-info').innerHTML = '';
+            document.getElementById('logo-preview').style.display = 'none';
+            document.getElementById('watermark-results').style.display = 'none';
+            document.getElementById('opacity-value').textContent = '10%';
+            document.getElementById('preview-watermark').style.opacity = 0.1;
+            document.getElementById('preview-text').textContent = '© 2025 Watermarked Document. All Rights Reserved.';
+        }
+
+        function setupDropZone(dropZone, input, callback) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                input.files = e.dataTransfer.files;
+                callback();
+            });
+        }
+    </script>
+</body>
+</html>

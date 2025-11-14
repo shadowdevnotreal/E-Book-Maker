@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Marketing & Author Tools - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">AI-Powered Marketing & Author Tools</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing" class="active">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="ai-status-container">
+            <span class="ai-status-badge" id="nav-ai-status" style="display: none;">
+                🤖 AI ENABLED • Powered by Groq
+            </span>
+        </div>
+
+        <main>
+            <div class="marketing-intro">
+                <h2>📚 AI-Powered Writing & Marketing Suite</h2>
+                <p class="intro-main">Professional tools to write, polish, and promote your books with AI assistance.</p>
+
+                <div class="quick-start-actions">
+                    <button class="quick-start-btn" onclick="scrollToSection('content-creation')">
+                        <span class="btn-icon">✍️</span>
+                        <span class="btn-text">Create Content</span>
+                    </button>
+                    <button class="quick-start-btn" onclick="scrollToSection('text-enhancement')">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text">Polish Text</span>
+                    </button>
+                    <button class="quick-start-btn" onclick="scrollToSection('marketing-tools')">
+                        <span class="btn-icon">🎯</span>
+                        <span class="btn-text">Market Your Book</span>
+                    </button>
+                </div>
+
+                <p class="intro-subtitle">Choose a tool below or ask the AI Assistant for personalized help</p>
+            </div>
+
+            <!-- Content Creation Section -->
+            <section class="tool-section" id="content-creation">
+                <h3>✍️ Content Creation</h3>
+                <p class="section-description">Generate chapters, outlines, and descriptions with AI</p>
+
+                <div class="tool-grid">
+                    <!-- Chapter Outline Generator -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📋 Chapter Outline Generator</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Generate detailed chapter outlines based on your book concept and genre.</p>
+
+                        <form id="outline-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="outline-title">Book Title</label>
+                                <input type="text" id="outline-title" placeholder="Enter your book title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="outline-genre">Genre</label>
+                                <select id="outline-genre" required>
+                                    <option value="">Select genre...</option>
+                                    <option value="fiction">Fiction</option>
+                                    <option value="non-fiction">Non-Fiction</option>
+                                    <option value="mystery">Mystery</option>
+                                    <option value="romance">Romance</option>
+                                    <option value="sci-fi">Science Fiction</option>
+                                    <option value="fantasy">Fantasy</option>
+                                    <option value="thriller">Thriller</option>
+                                    <option value="self-help">Self-Help</option>
+                                    <option value="business">Business</option>
+                                    <option value="biography">Biography</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="outline-concept">Book Concept / Summary</label>
+                                <textarea id="outline-concept" rows="4" placeholder="Briefly describe your book concept..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="outline-chapters">Number of Chapters</label>
+                                <input type="number" id="outline-chapters" min="3" max="50" value="10">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Generate Outline</button>
+                        </form>
+
+                        <div id="outline-result" class="tool-result" style="display: none;">
+                            <h5>Generated Outline:</h5>
+                            <div id="outline-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('outline-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                            <button onclick="downloadText('outline-content', 'chapter-outline.txt')" class="btn btn-secondary">Download</button>
+                        </div>
+                    </div>
+
+                    <!-- Chapter Generator -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>✍️ Chapter Generator</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Generate full chapter content based on your outline or concept.</p>
+
+                        <form id="chapter-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="chapter-title">Chapter Title</label>
+                                <input type="text" id="chapter-title" placeholder="Enter chapter title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="chapter-outline">Chapter Outline / Key Points</label>
+                                <textarea id="chapter-outline" rows="4" placeholder="Enter key points or outline for this chapter..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="chapter-style">Writing Style</label>
+                                <select id="chapter-style" required>
+                                    <option value="formal">Formal</option>
+                                    <option value="casual">Casual</option>
+                                    <option value="conversational">Conversational</option>
+                                    <option value="academic">Academic</option>
+                                    <option value="narrative">Narrative</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="chapter-length">Approximate Length (words)</label>
+                                <input type="number" id="chapter-length" min="500" max="5000" value="1500" step="100">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Generate Chapter</button>
+                        </form>
+
+                        <div id="chapter-result" class="tool-result" style="display: none;">
+                            <h5>Generated Chapter:</h5>
+                            <div id="chapter-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('chapter-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                            <button onclick="downloadText('chapter-content', 'chapter.txt')" class="btn btn-secondary">Download</button>
+                        </div>
+                    </div>
+
+                    <!-- Book Description Generator -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📖 Book Description Generator</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Create compelling book descriptions for Amazon, Goodreads, and other platforms.</p>
+
+                        <form id="description-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="desc-title">Book Title</label>
+                                <input type="text" id="desc-title" placeholder="Enter book title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="desc-genre">Genre</label>
+                                <select id="desc-genre" required>
+                                    <option value="">Select genre...</option>
+                                    <option value="fiction">Fiction</option>
+                                    <option value="non-fiction">Non-Fiction</option>
+                                    <option value="mystery">Mystery</option>
+                                    <option value="romance">Romance</option>
+                                    <option value="sci-fi">Science Fiction</option>
+                                    <option value="fantasy">Fantasy</option>
+                                    <option value="thriller">Thriller</option>
+                                    <option value="self-help">Self-Help</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="desc-summary">Book Summary</label>
+                                <textarea id="desc-summary" rows="5" placeholder="Provide a brief summary of your book..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="desc-tone">Tone</label>
+                                <select id="desc-tone" required>
+                                    <option value="exciting">Exciting</option>
+                                    <option value="mysterious">Mysterious</option>
+                                    <option value="inspirational">Inspirational</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="humorous">Humorous</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Generate Description</button>
+                        </form>
+
+                        <div id="description-result" class="tool-result" style="display: none;">
+                            <h5>Generated Description:</h5>
+                            <div id="description-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('description-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Text Enhancement Section -->
+            <section class="tool-section" id="text-enhancement">
+                <h3>✨ Text Enhancement</h3>
+                <p class="section-description">Proofread, improve readability, and polish your writing</p>
+
+                <div class="tool-grid">
+                    <!-- Proofreading Tool -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>🔍 Proofreading & Grammar Check</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Check for grammar errors, typos, and improve overall writing quality.</p>
+
+                        <form id="proofread-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="proofread-text">Text to Proofread</label>
+                                <textarea id="proofread-text" rows="8" placeholder="Paste your text here..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Proofread Text</button>
+                        </form>
+
+                        <div id="proofread-result" class="tool-result" style="display: none;">
+                            <h5>Proofread Version:</h5>
+                            <div id="proofread-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('proofread-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+
+                    <!-- Readability Improver -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📊 Readability Improver</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Make your text clearer, more concise, and easier to read.</p>
+
+                        <form id="readability-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="readability-text">Text to Improve</label>
+                                <textarea id="readability-text" rows="8" placeholder="Paste your text here..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="readability-level">Target Audience</label>
+                                <select id="readability-level" required>
+                                    <option value="general">General Audience</option>
+                                    <option value="academic">Academic/Professional</option>
+                                    <option value="young-adult">Young Adult</option>
+                                    <option value="children">Children</option>
+                                    <option value="expert">Expert/Technical</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Improve Readability</button>
+                        </form>
+
+                        <div id="readability-result" class="tool-result" style="display: none;">
+                            <h5>Improved Version:</h5>
+                            <div id="readability-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('readability-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+
+                    <!-- Text Expander/Summarizer -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📝 Expand or Summarize Text</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Expand short text with more details or summarize long text concisely.</p>
+
+                        <form id="transform-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="transform-text">Text to Transform</label>
+                                <textarea id="transform-text" rows="8" placeholder="Paste your text here..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="transform-action">Action</label>
+                                <select id="transform-action" required>
+                                    <option value="expand">Expand (Add more detail)</option>
+                                    <option value="summarize">Summarize (Make concise)</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Transform Text</button>
+                        </form>
+
+                        <div id="transform-result" class="tool-result" style="display: none;">
+                            <h5>Transformed Text:</h5>
+                            <div id="transform-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('transform-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketing & Metadata Section -->
+            <section class="tool-section" id="marketing-tools">
+                <h3>🎯 Marketing & Metadata</h3>
+                <p class="section-description">Create keywords, categories, and promotional copy for Amazon KDP</p>
+
+                <div class="tool-grid">
+                    <!-- KDP Keywords Generator -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>🔑 KDP Keywords Generator</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Generate optimized keywords for Amazon KDP to improve discoverability.</p>
+
+                        <form id="keywords-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="keywords-title">Book Title</label>
+                                <input type="text" id="keywords-title" placeholder="Enter book title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="keywords-genre">Genre</label>
+                                <select id="keywords-genre" required>
+                                    <option value="">Select genre...</option>
+                                    <option value="fiction">Fiction</option>
+                                    <option value="non-fiction">Non-Fiction</option>
+                                    <option value="mystery">Mystery</option>
+                                    <option value="romance">Romance</option>
+                                    <option value="sci-fi">Science Fiction</option>
+                                    <option value="fantasy">Fantasy</option>
+                                    <option value="thriller">Thriller</option>
+                                    <option value="self-help">Self-Help</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="keywords-themes">Main Themes / Topics</label>
+                                <textarea id="keywords-themes" rows="3" placeholder="e.g., artificial intelligence, romance, adventure..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Generate Keywords</button>
+                        </form>
+
+                        <div id="keywords-result" class="tool-result" style="display: none;">
+                            <h5>Suggested KDP Keywords:</h5>
+                            <div id="keywords-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('keywords-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+
+                    <!-- Categories Suggester -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📚 KDP Categories Suggester</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Find the best Amazon KDP categories for your book.</p>
+
+                        <form id="categories-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="categories-title">Book Title</label>
+                                <input type="text" id="categories-title" placeholder="Enter book title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="categories-description">Book Description</label>
+                                <textarea id="categories-description" rows="4" placeholder="Brief description of your book..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="categories-genre">Primary Genre</label>
+                                <select id="categories-genre" required>
+                                    <option value="">Select genre...</option>
+                                    <option value="fiction">Fiction</option>
+                                    <option value="non-fiction">Non-Fiction</option>
+                                    <option value="mystery">Mystery</option>
+                                    <option value="romance">Romance</option>
+                                    <option value="sci-fi">Science Fiction</option>
+                                    <option value="fantasy">Fantasy</option>
+                                    <option value="thriller">Thriller</option>
+                                    <option value="self-help">Self-Help</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Suggest Categories</button>
+                        </form>
+
+                        <div id="categories-result" class="tool-result" style="display: none;">
+                            <h5>Recommended Categories:</h5>
+                            <div id="categories-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('categories-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+
+                    <!-- Marketing Copy Generator -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <h4>📣 Marketing Copy Generator</h4>
+                            <span class="tool-badge">AI-Powered</span>
+                        </div>
+                        <p>Create engaging marketing copy for social media, ads, and promotional materials.</p>
+
+                        <form id="marketing-form" class="tool-form">
+                            <div class="form-group">
+                                <label for="marketing-title">Book Title</label>
+                                <input type="text" id="marketing-title" placeholder="Enter book title" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="marketing-description">Book Summary</label>
+                                <textarea id="marketing-description" rows="4" placeholder="Brief summary of your book..." required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="marketing-type">Marketing Type</label>
+                                <select id="marketing-type" required>
+                                    <option value="social-media">Social Media Post</option>
+                                    <option value="email">Email Campaign</option>
+                                    <option value="ad">Facebook/Instagram Ad</option>
+                                    <option value="back-cover">Back Cover Text</option>
+                                    <option value="press-release">Press Release</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Generate Marketing Copy</button>
+                        </form>
+
+                        <div id="marketing-result" class="tool-result" style="display: none;">
+                            <h5>Generated Marketing Copy:</h5>
+                            <div id="marketing-content" class="result-content"></div>
+                            <button onclick="copyToClipboard('marketing-content')" class="btn btn-secondary">Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 E-Book Maker. AI-powered by Groq.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/marketing.js') }}"></script>
+    <script>
+        // Check AI status
+        fetch('/api/ai/status')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('nav-ai-status');
+                if (data.enabled) {
+                    badge.style.display = 'inline-block';
+                }
+            });
+
+        // Utility functions
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✓ Copied to clipboard!');
+            });
+        }
+
+        function downloadText(elementId, filename) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Settings & Configuration</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing">AI Marketing</a>
+            <a href="/settings" class="active">Settings</a>
+        </nav>
+
+        <main class="settings-page">
+            <h2>Settings & Configuration</h2>
+
+            <!-- AI Configuration Section -->
+            <div class="settings-section ai-settings">
+                <h3>🤖 AI Assistant Configuration</h3>
+                <p>Enable AI-powered features for cover design, content generation, and text enhancement. <strong>Powered by Groq.</strong></p>
+
+                <div class="ai-status" id="ai-status-container">
+                    <div class="status-badge" id="ai-status-badge">
+                        <span id="ai-status-text">○ AI Not Configured</span>
+                    </div>
+                </div>
+
+                <!-- Current API Key Display -->
+                <div id="current-key-display" style="display: none; margin-bottom: 16px; padding: 12px; background: #f5f5f5; border-radius: 4px;">
+                    <strong>Current API Key:</strong> <span id="masked-key-display"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="groq-api-key">Groq API Key</label>
+                    <div class="api-key-input-group">
+                        <input type="password" id="groq-api-key" placeholder="gsk_..." style="flex: 1;">
+                        <button type="button" onclick="toggleApiKeyVisibility()" class="btn btn-secondary">👁️</button>
+                    </div>
+                    <p class="help-text">Get your free API key at <a href="https://groq.com" target="_blank">groq.com</a></p>
+                </div>
+
+                <!-- Model Selector -->
+                <div class="form-group" id="model-selector-container" style="display: none;">
+                    <label for="groq-model-select">AI Model</label>
+                    <select id="groq-model-select" onchange="changeAIModel()" class="model-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <div id="model-info" class="model-info-box" style="margin-top: 8px; padding: 12px; background: #f8f9fa; border-radius: 4px; display: none;">
+                        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 8px;">
+                            <span id="model-name" style="font-weight: bold; font-size: 1.1em;"></span>
+                            <span id="model-quality-badge" class="badge"></span>
+                            <span id="model-speed-badge" class="badge"></span>
+                        </div>
+                        <p id="model-description" style="margin: 0; color: #666;"></p>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" onclick="saveAndTestApiKey()" class="btn btn-primary">Save & Test API Key</button>
+                    <button type="button" onclick="clearApiKey()" class="btn btn-danger" id="clear-key-btn" style="display: none;">Remove API Key</button>
+                </div>
+
+                <div id="ai-test-result" class="status-message" style="display: none; margin-top: 16px;"></div>
+
+                <div class="ai-features-info" style="margin-top: 24px;">
+                    <h4>✨ AI Features Available When Enabled:</h4>
+                    <ul>
+                        <li><strong>Cover Generation:</strong> AI title/subtitle suggestions, color schemes, design styles</li>
+                        <li><strong>Content Creation:</strong> Chapter outlines, full chapter generation, book descriptions</li>
+                        <li><strong>Text Enhancement:</strong> Proofreading, readability improvement, expansion/summarization</li>
+                        <li><strong>Metadata & Marketing:</strong> KDP keywords, categories, marketing copy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Privacy & Storage Section -->
+            <div class="settings-section privacy-storage">
+                <h3>🔒 Privacy & Storage</h3>
+                <p>Control where your marketing project data is saved.</p>
+
+                <div class="form-group">
+                    <label>Storage Location</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="storage-location" value="local" checked onchange="updateStoragePreference()">
+                            <div class="radio-label">
+                                <strong>📁 Local File System (Recommended)</strong>
+                                <p>Saves projects to <code>output/marketing/</code> folder. More secure, no browser limits.</p>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="storage-location" value="browser" onchange="updateStoragePreference()">
+                            <div class="radio-label">
+                                <strong>🌐 Browser Storage</strong>
+                                <p>Saves to browser LocalStorage. Portable but limited to ~5-10MB per site.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="autosave-interval">Auto-Save Interval</label>
+                    <select id="autosave-interval" onchange="updateAutoSaveInterval()">
+                        <option value="3">Every 3 seconds</option>
+                        <option value="5">Every 5 seconds</option>
+                        <option value="10">Every 10 seconds</option>
+                        <option value="30">Every 30 seconds</option>
+                        <option value="0">Disabled (Manual save only)</option>
+                    </select>
+                </div>
+
+                <div id="storage-status" class="info-box" style="margin-top: 16px;">
+                    <strong>Current Storage:</strong> <span id="current-storage-location">Local File System</span><br>
+                    <strong>Last Auto-Save:</strong> <span id="last-autosave-time">Never</span>
+                </div>
+            </div>
+
+            <!-- Data Management Section -->
+            <h2>🗄️ Data Management</h2>
+
+            <div class="settings-section data-management">
+                <h3>⚠️ Reset & Clear Options</h3>
+                <p class="warning-text">Use these options carefully. Some actions cannot be undone.</p>
+
+                <div class="reset-options">
+                    <div class="reset-option">
+                        <div class="reset-option-header">
+                            <h4>📋 Clear Project History</h4>
+                            <button class="btn btn-secondary" onclick="clearProjectHistory()">Clear History</button>
+                        </div>
+                        <p>Removes all project records from the dashboard. <strong>Your output files will NOT be deleted.</strong></p>
+                    </div>
+
+                    <div class="reset-option">
+                        <div class="reset-option-header">
+                            <h4>📚 Clear E-Books</h4>
+                            <button class="btn btn-warning" onclick="clearOutputFiles('ebooks')">Clear E-Books</button>
+                        </div>
+                        <p>Deletes all generated e-book files from the output/ebooks folder.</p>
+                    </div>
+
+                    <div class="reset-option">
+                        <div class="reset-option-header">
+                            <h4>🎨 Clear Covers</h4>
+                            <button class="btn btn-warning" onclick="clearOutputFiles('covers')">Clear Covers</button>
+                        </div>
+                        <p>Deletes all generated cover files from the output/covers folder.</p>
+                    </div>
+
+                    <div class="reset-option">
+                        <div class="reset-option-header">
+                            <h4>💧 Clear Watermarked Files</h4>
+                            <button class="btn btn-warning" onclick="clearOutputFiles('watermarked')">Clear Watermarks</button>
+                        </div>
+                        <p>Deletes all watermarked files from the output/watermarked folder.</p>
+                    </div>
+
+                    <div class="reset-option">
+                        <div class="reset-option-header">
+                            <h4>📁 Clear All Output Files</h4>
+                            <button class="btn btn-warning" onclick="clearAllOutputFiles()">Clear All Files</button>
+                        </div>
+                        <p>Deletes ALL output files from ebooks, covers, and watermarked folders. Project history remains.</p>
+                    </div>
+
+                    <div class="reset-option danger-zone">
+                        <div class="reset-option-header">
+                            <h4>🔥 RESET EVERYTHING</h4>
+                            <button class="btn btn-danger" onclick="resetAllData()">RESET ALL</button>
+                        </div>
+                        <p><strong>⚠️ WARNING:</strong> This will delete ALL project history AND all output files. This action cannot be undone!</p>
+                    </div>
+                </div>
+
+                <div id="reset-result" class="status-message" style="display: none; margin-top: 20px;"></div>
+            </div>
+
+            <h2>System Information</h2>
+
+            <div class="settings-section">
+                <h3>Dependencies Status</h3>
+                <div class="dependencies-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Status</th>
+                                <th>Purpose</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dependencies-tbody">
+                            <tr>
+                                <td>Pandoc</td>
+                                <td id="dep-pandoc">Checking...</td>
+                                <td>Document conversion</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>wkhtmltopdf</td>
+                                <td id="dep-wkhtmltopdf">Checking...</td>
+                                <td>PDF generation</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>LaTeX (pdflatex)</td>
+                                <td id="dep-latex">Checking...</td>
+                                <td>Advanced PDF formatting</td>
+                                <td>No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Installation Instructions</h3>
+
+                <details class="install-details">
+                    <summary>Windows Installation</summary>
+                    <div class="install-content">
+                        <h4>Pandoc</h4>
+                        <code>choco install pandoc</code>
+                        <p>Or download from: <a href="https://pandoc.org/installing.html" target="_blank">pandoc.org</a></p>
+
+                        <h4>wkhtmltopdf</h4>
+                        <code>choco install wkhtmltopdf</code>
+                        <p>Or download from: <a href="https://wkhtmltopdf.org/downloads.html" target="_blank">wkhtmltopdf.org</a></p>
+                    </div>
+                </details>
+
+                <details class="install-details">
+                    <summary>macOS Installation</summary>
+                    <div class="install-content">
+                        <h4>Pandoc</h4>
+                        <code>brew install pandoc</code>
+
+                        <h4>wkhtmltopdf</h4>
+                        <code>brew install wkhtmltopdf</code>
+
+                        <h4>LaTeX (Optional)</h4>
+                        <code>brew install --cask mactex</code>
+                    </div>
+                </details>
+
+                <details class="install-details">
+                    <summary>Linux Installation</summary>
+                    <div class="install-content">
+                        <h4>Ubuntu/Debian</h4>
+                        <code>sudo apt-get install pandoc wkhtmltopdf</code>
+
+                        <h4>Fedora</h4>
+                        <code>sudo dnf install pandoc wkhtmltopdf</code>
+
+                        <h4>Arch Linux</h4>
+                        <code>sudo pacman -S pandoc wkhtmltopdf</code>
+
+                        <h4>LaTeX (Optional, ~500MB)</h4>
+                        <code>sudo apt-get install texlive-latex-base texlive-fonts-recommended</code>
+                    </div>
+                </details>
+            </div>
+
+            <div class="settings-section">
+                <h3>About E-Book Maker</h3>
+                <p><strong>Version:</strong> 1.0.0</p>
+                <p><strong>Purpose:</strong> Professional e-book creation, cover design, and document protection</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Multi-format document conversion (EPUB, PDF, HTML)</li>
+                    <li>Professional cover generation and conversion</li>
+                    <li>Document watermarking with text and logos</li>
+                    <li>Cross-platform support (Windows, macOS, Linux)</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // Check AI and dependencies on load
+        checkAIStatus();
+        checkDependenciesDetailed();
+
+        // AI Configuration Functions
+        async function checkAIStatus() {
+            try {
+                const response = await fetch('/api/ai/status');
+                const data = await response.json();
+
+                const statusBadge = document.getElementById('ai-status-badge');
+                const statusText = document.getElementById('ai-status-text');
+                const currentKeyDisplay = document.getElementById('current-key-display');
+                const maskedKeyDisplay = document.getElementById('masked-key-display');
+                const clearBtn = document.getElementById('clear-key-btn');
+
+                const modelSelector = document.getElementById('model-selector-container');
+
+                if (data.enabled) {
+                    statusBadge.className = 'status-badge enabled';
+                    const modelName = data.model_info ? data.model_info.name : data.model;
+                    statusText.textContent = `✓ AI ENABLED - ${modelName}`;
+
+                    // Show current key
+                    if (data.masked_key) {
+                        currentKeyDisplay.style.display = 'block';
+                        maskedKeyDisplay.textContent = data.masked_key;
+                        clearBtn.style.display = 'inline-block';
+                    }
+
+                    // Show model selector and load models
+                    modelSelector.style.display = 'block';
+                    loadAvailableModels();
+                } else if (data.has_key) {
+                    statusBadge.className = 'status-badge warning';
+                    statusText.textContent = '⚠ API Key Saved (Validation Failed)';
+
+                    if (data.masked_key) {
+                        currentKeyDisplay.style.display = 'block';
+                        maskedKeyDisplay.textContent = data.masked_key;
+                        clearBtn.style.display = 'inline-block';
+                    }
+
+                    // Hide model selector if not enabled
+                    modelSelector.style.display = 'none';
+                } else {
+                    statusBadge.className = 'status-badge';
+                    statusText.textContent = '○ AI Not Configured';
+                    currentKeyDisplay.style.display = 'none';
+                    clearBtn.style.display = 'none';
+                    modelSelector.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking AI status:', error);
+            }
+        }
+
+        async function saveAndTestApiKey() {
+            const apiKey = document.getElementById('groq-api-key').value.trim();
+            const resultDiv = document.getElementById('ai-test-result');
+
+            if (!apiKey) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = '✗ Please enter an API key';
+                return;
+            }
+
+            // Show loading
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = '⏳ Testing API key...';
+
+            try {
+                const response = await fetch('/api/ai/set-key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({api_key: apiKey})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = data.message;
+                    checkAIStatus();  // Update status badge
+                    // Optionally clear the input
+                    document.getElementById('groq-api-key').value = '';
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = data.error || 'API key validation failed';
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = `✗ Error: ${error.message}`;
+            }
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('groq-api-key');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function clearApiKey() {
+            if (!confirm('Are you sure you want to remove the API key? This will disable all AI features.')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('ai-test-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = '⏳ Removing API key...';
+
+            try {
+                const response = await fetch('/api/ai/clear-key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = data.message;
+                    document.getElementById('groq-api-key').value = '';
+                    checkAIStatus();  // Update status display
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = data.error || 'Failed to clear API key';
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = `✗ Error: ${error.message}`;
+            }
+        }
+
+        // Model Management Functions
+        async function loadAvailableModels() {
+            try {
+                const response = await fetch('/api/ai/models');
+                const data = await response.json();
+
+                if (data.success) {
+                    const select = document.getElementById('groq-model-select');
+                    const currentModelResponse = await fetch('/api/ai/current-model');
+                    const currentData = await currentModelResponse.json();
+                    const currentModel = currentData.model_id;
+
+                    // Build options
+                    select.innerHTML = '';
+                    Object.entries(data.models).forEach(([modelId, modelInfo]) => {
+                        const option = document.createElement('option');
+                        option.value = modelId;
+                        option.textContent = `${modelInfo.name} - ${modelInfo.description}`;
+                        if (modelId === currentModel) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
+                    // Show model info for current selection
+                    updateModelInfo(currentData.model_info);
+                }
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        }
+
+        function updateModelInfo(modelInfo) {
+            const infoBox = document.getElementById('model-info');
+            const nameEl = document.getElementById('model-name');
+            const descEl = document.getElementById('model-description');
+            const qualityBadge = document.getElementById('model-quality-badge');
+            const speedBadge = document.getElementById('model-speed-badge');
+
+            nameEl.textContent = modelInfo.name || '';
+            descEl.textContent = modelInfo.description || '';
+
+            // Quality badge
+            const qualityColors = {
+                'highest': '#10b981',
+                'high': '#3b82f6',
+                'good': '#8b5cf6'
+            };
+            qualityBadge.textContent = modelInfo.quality || 'high';
+            qualityBadge.style.background = qualityColors[modelInfo.quality] || '#3b82f6';
+            qualityBadge.style.color = 'white';
+            qualityBadge.style.padding = '4px 8px';
+            qualityBadge.style.borderRadius = '4px';
+            qualityBadge.style.fontSize = '0.85em';
+
+            // Speed badge
+            const speedColors = {
+                'ultra-fast': '#10b981',
+                'fastest': '#10b981',
+                'fast': '#3b82f6',
+                'medium': '#8b5cf6'
+            };
+            speedBadge.textContent = modelInfo.speed || 'medium';
+            speedBadge.style.background = speedColors[modelInfo.speed] || '#8b5cf6';
+            speedBadge.style.color = 'white';
+            speedBadge.style.padding = '4px 8px';
+            speedBadge.style.borderRadius = '4px';
+            speedBadge.style.fontSize = '0.85em';
+
+            infoBox.style.display = 'block';
+        }
+
+        async function changeAIModel() {
+            const select = document.getElementById('groq-model-select');
+            const modelId = select.value;
+
+            try {
+                const response = await fetch('/api/ai/set-model', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ model_id: modelId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    updateModelInfo(data.model_info);
+                    // Show success message
+                    const resultDiv = document.getElementById('ai-test-result');
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = data.message;
+                    setTimeout(() => {
+                        resultDiv.style.display = 'none';
+                    }, 3000);
+                } else {
+                    alert('Error changing model: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error changing model: ' + error.message);
+            }
+        }
+
+        // Dependencies check
+        async function checkDependenciesDetailed() {
+            try {
+                const response = await fetch('/api/check-dependencies');
+                const data = await response.json();
+
+                updateDependencyStatus('dep-pandoc', data.dependencies.pandoc);
+                updateDependencyStatus('dep-wkhtmltopdf', data.dependencies.wkhtmltopdf);
+                updateDependencyStatus('dep-latex', data.dependencies.pdflatex);
+            } catch (error) {
+                console.error('Error checking dependencies:', error);
+            }
+        }
+
+        function updateDependencyStatus(elementId, installed) {
+            const element = document.getElementById(elementId);
+            if (installed) {
+                element.innerHTML = '<span class="status-installed">✓ Installed</span>';
+            } else {
+                element.innerHTML = '<span class="status-missing">✗ Not Found</span>';
+            }
+        }
+
+        // Data Management Functions
+        async function clearProjectHistory() {
+            if (!confirm('Clear all project history? Output files will NOT be deleted.')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('reset-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = '⏳ Clearing project history...';
+
+            try {
+                const response = await fetch('/api/projects/clear', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = '✓ ' + data.message;
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = '✗ ' + (data.error || 'Failed to clear history');
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        async function clearOutputFiles(type) {
+            const typeNames = {
+                'ebooks': 'e-books',
+                'covers': 'covers',
+                'watermarked': 'watermarked files'
+            };
+
+            if (!confirm(`Delete all ${typeNames[type] || 'files'}? This cannot be undone.`)) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('reset-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = `⏳ Deleting ${typeNames[type] || 'files'}...`;
+
+            try {
+                const response = await fetch('/api/projects/clear-files', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type: type})
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = '✓ ' + data.message;
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = '✗ ' + (data.error || 'Failed to delete files');
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        async function clearAllOutputFiles() {
+            if (!confirm('Delete ALL output files (ebooks, covers, watermarked)? This cannot be undone.')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('reset-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = '⏳ Deleting all output files...';
+
+            try {
+                const response = await fetch('/api/projects/clear-files', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({type: null})
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = '✓ ' + data.message;
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = '✗ ' + (data.error || 'Failed to delete files');
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        async function resetAllData() {
+            if (!confirm('⚠️ RESET EVERYTHING? This will delete ALL project history AND all output files. This action CANNOT be undone!')) {
+                return;
+            }
+
+            // Double confirmation for nuclear option
+            if (!confirm('Are you ABSOLUTELY SURE? This is your last chance to cancel.')) {
+                return;
+            }
+
+            const resultDiv = document.getElementById('reset-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'status-message';
+            resultDiv.textContent = '⏳ Resetting everything...';
+
+            try {
+                const response = await fetch('/api/projects/reset-all', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'status-message success';
+                    resultDiv.textContent = '✓ ' + data.message;
+                } else {
+                    resultDiv.className = 'status-message error';
+                    resultDiv.textContent = '✗ ' + (data.error || 'Failed to reset');
+                }
+            } catch (error) {
+                resultDiv.className = 'status-message error';
+                resultDiv.textContent = '✗ Error: ' + error.message;
+            }
+        }
+
+        // Privacy & Storage Functions
+        async function updateStoragePreference() {
+            const preference = document.querySelector('input[name="storage-location"]:checked').value;
+
+            try {
+                const response = await fetch('/api/settings/storage-preference', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ storage: preference })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('current-storage-location').textContent =
+                        preference === 'local' ? 'Local File System' : 'Browser Storage';
+                    toastSuccess('Storage preference updated');
+                }
+            } catch (error) {
+                toastError('Failed to update storage preference');
+            }
+        }
+
+        async function updateAutoSaveInterval() {
+            const interval = document.getElementById('autosave-interval').value;
+
+            try {
+                const response = await fetch('/api/settings/autosave-interval', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ interval: parseInt(interval) })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    toastSuccess('Auto-save interval updated');
+                }
+            } catch (error) {
+                toastError('Failed to update auto-save interval');
+            }
+        }
+
+        // Load settings on page load
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings/get-preferences');
+                const data = await response.json();
+
+                if (data.success) {
+                    // Set storage preference
+                    const storageRadio = document.querySelector(`input[name="storage-location"][value="${data.storage}"]`);
+                    if (storageRadio) storageRadio.checked = true;
+
+                    // Set autosave interval
+                    document.getElementById('autosave-interval').value = data.autosave_interval || 3;
+
+                    // Update status
+                    document.getElementById('current-storage-location').textContent =
+                        data.storage === 'local' ? 'Local File System' : 'Browser Storage';
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
+</body>
+</html>

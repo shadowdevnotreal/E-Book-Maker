@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Documents - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Convert Documents to E-Books</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert" class="active">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="ai-status-container">
+            <span class="ai-status-badge" id="nav-ai-status" style="display: none;">
+                🤖 AI ENABLED • Powered by Groq
+            </span>
+        </div>
+
+        <main class="convert-page">
+            <div class="tool-section">
+                <h2>Document Conversion</h2>
+                <p>Upload your markdown, text, or HTML files to create professional e-books in multiple formats.</p>
+
+                <form id="convert-form" enctype="multipart/form-data">
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label>Upload Documents</label>
+
+                        <!-- Upload Mode Toggle -->
+                        <div class="upload-mode-toggle" style="margin-bottom: 15px;">
+                            <label class="radio-label">
+                                <input type="radio" name="upload-mode" value="files" checked onchange="switchUploadMode('files')">
+                                <span>Individual Files</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="upload-mode" value="folder" onchange="switchUploadMode('folder')">
+                                <span>Folder (with chapters/appendixes)</span>
+                            </label>
+                        </div>
+
+                        <!-- Files Upload -->
+                        <div class="file-drop-zone" id="file-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📁</span>
+                                <p class="drop-zone-text">Drag & drop files here or click to browse</p>
+                                <p class="file-info">Supports: .md, .txt, .html, .docx, .epub, .odt, .rtf, .tex, .rst, .org</p>
+                            </div>
+                            <input type="file" id="file-input" name="files" multiple accept=".md,.markdown,.txt,.html,.htm,.docx,.epub,.odt,.rtf,.tex,.latex,.rst,.org" style="display: none;">
+                        </div>
+
+                        <!-- Folder Upload (hidden by default) -->
+                        <div class="file-drop-zone" id="folder-drop-zone" style="display: none;">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">📂</span>
+                                <p>Click to select folder with chapters/ and appendixes/</p>
+                                <p class="file-info">Folder structure: chapters/*.md, appendixes/*.md</p>
+                            </div>
+                            <input type="file" id="folder-input" name="folder" webkitdirectory directory multiple style="display: none;">
+                        </div>
+
+                        <div id="file-list" class="uploaded-files"></div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="title">Book Title</label>
+                            <input type="text" id="title" name="title" placeholder="Enter book title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="author">Author Name</label>
+                            <input type="text" id="author" name="author" placeholder="Enter author name" required>
+                        </div>
+                    </div>
+
+                    <!-- Output Formats -->
+                    <div class="form-group">
+                        <label>Output Formats</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="epub" checked>
+                                <span>EPUB (E-Reader)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="pdf" checked>
+                                <span>PDF (Print/Digital)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="html">
+                                <span>HTML (Web)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="docx">
+                                <span>DOCX (Word)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="formats" value="md">
+                                <span>MD (Markdown)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <details class="advanced-options">
+                        <summary>Advanced Options</summary>
+                        <div class="form-group">
+                            <label for="subtitle">Subtitle (optional)</label>
+                            <input type="text" id="subtitle" name="subtitle" placeholder="Enter subtitle">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="include_toc" checked>
+                                <span>Include Table of Contents</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="normalize_text" checked>
+                                <span>Normalize text encoding</span>
+                            </label>
+                        </div>
+
+                        <!-- Page Numbering Options -->
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="page_numbering_enabled" id="page-numbering-toggle" checked onchange="togglePageNumberingOptions()">
+                                <span>Enable automatic page numbering (PDF & DOCX)</span>
+                            </label>
+                        </div>
+
+                        <div id="page-numbering-options" style="margin-left: 20px; padding: 15px; border-left: 3px solid var(--primary-color); background: var(--bg-color); border-radius: 8px;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="page-number-position">Position</label>
+                                    <select id="page-number-position" name="page_number_position">
+                                        <option value="footer-center" selected>Footer - Center</option>
+                                        <option value="footer-left">Footer - Left</option>
+                                        <option value="footer-right">Footer - Right</option>
+                                        <option value="header-center">Header - Center</option>
+                                        <option value="header-left">Header - Left</option>
+                                        <option value="header-right">Header - Right</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="page-number-style">Numbering Style</label>
+                                    <select id="page-number-style" name="page_number_style">
+                                        <option value="arabic" selected>Arabic (1, 2, 3...)</option>
+                                        <option value="roman">Roman lowercase (i, ii, iii...)</option>
+                                        <option value="Roman">Roman uppercase (I, II, III...)</option>
+                                        <option value="alph">Alphabet lowercase (a, b, c...)</option>
+                                        <option value="Alph">Alphabet uppercase (A, B, C...)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="front_matter_enabled" id="front-matter-toggle">
+                                    <span>Different numbering for front matter (preface, TOC)</span>
+                                </label>
+                                <div id="front-matter-style" style="display: none; margin-top: 10px; margin-left: 20px;">
+                                    <label for="front-matter-number-style">Front Matter Style</label>
+                                    <select id="front-matter-number-style" name="front_matter_style">
+                                        <option value="roman" selected>Roman lowercase (i, ii, iii...)</option>
+                                        <option value="Roman">Roman uppercase (I, II, III...)</option>
+                                        <option value="arabic">Arabic (1, 2, 3...)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Action Buttons -->
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span>Convert to E-Book</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                    </div>
+                </form>
+
+                <!-- Progress Section -->
+                <div id="progress-section" class="progress-section" style="display: none;">
+                    <h3>Conversion Progress</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">Preparing conversion...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" class="results-section" style="display: none;">
+                    <h3>Conversion Complete</h3>
+                    <div id="results-content"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // File drop zone handling
+        const dropZone = document.getElementById('file-drop-zone');
+        const folderDropZone = document.getElementById('folder-drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const folderInput = document.getElementById('folder-input');
+        const fileList = document.getElementById('file-list');
+
+        let currentMode = 'files';
+
+        // Switch between file and folder upload modes
+        function switchUploadMode(mode) {
+            currentMode = mode;
+            if (mode === 'files') {
+                dropZone.style.display = 'block';
+                folderDropZone.style.display = 'none';
+                fileList.innerHTML = '';
+            } else {
+                dropZone.style.display = 'none';
+                folderDropZone.style.display = 'block';
+                fileList.innerHTML = '';
+            }
+        }
+
+        // File mode handlers
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            fileInput.files = e.dataTransfer.files;
+            displayFiles();
+        });
+
+        fileInput.addEventListener('change', displayFiles);
+
+        // Folder mode handlers
+        folderDropZone.addEventListener('click', () => folderInput.click());
+
+        folderInput.addEventListener('change', displayFolderFiles);
+
+        function displayFiles() {
+            fileList.innerHTML = '';
+            const files = fileInput.files;
+
+            if (files.length === 0) return;
+
+            for (let i = 0; i < files.length; i++) {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${files[i].name}</span>
+                    <span class="file-size">${formatFileSize(files[i].size)}</span>
+                    <button type="button" class="btn-remove" onclick="removeFile(${i})">×</button>
+                `;
+                fileList.appendChild(fileItem);
+            }
+        }
+
+        function displayFolderFiles() {
+            fileList.innerHTML = '';
+            const files = folderInput.files;
+
+            if (files.length === 0) return;
+
+            // Group files by folder
+            const folders = {};
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const pathParts = file.webkitRelativePath.split('/');
+
+                if (pathParts.length > 1) {
+                    const folder = pathParts[pathParts.length - 2];
+                    if (!folders[folder]) folders[folder] = [];
+                    folders[folder].push(file);
+                }
+            }
+
+            // Display folder structure
+            for (const [folder, folderFiles] of Object.entries(folders)) {
+                const folderHeader = document.createElement('div');
+                folderHeader.style.cssText = 'font-weight: bold; margin-top: 10px; color: #374151;';
+                folderHeader.textContent = `${folder}/ (${folderFiles.length} files)`;
+                fileList.appendChild(folderHeader);
+
+                folderFiles.forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.style.marginLeft = '20px';
+                    fileItem.innerHTML = `
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${formatFileSize(file.size)}</span>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+        }
+
+        function removeFile(index) {
+            const dt = new DataTransfer();
+            const files = fileInput.files;
+
+            for (let i = 0; i < files.length; i++) {
+                if (i !== index) dt.items.add(files[i]);
+            }
+
+            fileInput.files = dt.files;
+            displayFiles();
+        }
+
+        function resetForm() {
+            // Reset the form
+            const form = document.getElementById('convert-form');
+            form.reset();
+
+            // Clear file inputs manually (more reliable than form.reset())
+            fileInput.value = '';
+            folderInput.value = '';
+            fileInput.files = null;
+            folderInput.files = null;
+
+            // Clear file list display
+            fileList.innerHTML = '';
+
+            // Reset drop zone text
+            const dropZoneText = document.querySelector('#file-drop-zone .drop-zone-text');
+            if (dropZoneText) {
+                dropZoneText.textContent = 'Drag & drop files here or click to browse';
+            }
+
+            // Uncheck all format checkboxes
+            document.querySelectorAll('input[name="formats"]').forEach(cb => cb.checked = false);
+
+            // Reset page numbering toggles
+            document.getElementById('page-numbering-toggle').checked = false;
+            document.getElementById('page-numbering-options').style.display = 'none';
+            document.getElementById('front-matter-toggle').checked = false;
+            document.getElementById('front-matter-style').style.display = 'none';
+
+            // Hide progress and results sections
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'none';
+
+            // Reset upload mode to files
+            switchUploadMode('files');
+        }
+
+        // Toggle page numbering options visibility
+        function togglePageNumberingOptions() {
+            const enabled = document.getElementById('page-numbering-toggle').checked;
+            const options = document.getElementById('page-numbering-options');
+            options.style.display = enabled ? 'block' : 'none';
+        }
+
+        // Toggle front matter style selector
+        document.getElementById('front-matter-toggle').addEventListener('change', function() {
+            const styleDiv = document.getElementById('front-matter-style');
+            styleDiv.style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Form submission
+        document.getElementById('convert-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+
+            // Add files based on mode
+            if (currentMode === 'files') {
+                const files = fileInput.files;
+                if (files.length === 0) {
+                    showError('Please select at least one file');
+                    return;
+                }
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i]);
+                }
+            } else {
+                const files = folderInput.files;
+                if (files.length === 0) {
+                    showError('Please select a folder');
+                    return;
+                }
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i], files[i].webkitRelativePath);
+                }
+                formData.append('is_folder', 'true');
+            }
+
+            // Add basic book information
+            formData.append('title', document.getElementById('title').value);
+            formData.append('author', document.getElementById('author').value);
+            formData.append('subtitle', document.getElementById('subtitle').value);
+
+            // Add selected formats
+            const formatCheckboxes = document.querySelectorAll('input[name="formats"]:checked');
+            formatCheckboxes.forEach(checkbox => {
+                formData.append('formats', checkbox.value);
+            });
+
+            // Add page numbering configuration
+            if (document.getElementById('page-numbering-toggle').checked) {
+                formData.append('page_numbering_enabled', 'true');
+                formData.append('page_number_position', document.getElementById('page-number-position').value);
+                formData.append('page_number_style', document.getElementById('page-number-style').value);
+
+                if (document.getElementById('front-matter-toggle').checked) {
+                    formData.append('front_matter_enabled', 'true');
+                    formData.append('front_matter_style', document.getElementById('front-matter-number-style').value);
+                }
+            }
+
+            // Show progress
+            document.getElementById('progress-section').style.display = 'block';
+            document.getElementById('results-section').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResults(result);
+                } else {
+                    showError(result.error || 'Conversion failed');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        });
+
+        function showResults(result) {
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="success-message">
+                    <p>${result.message}</p>
+                </div>
+                <div class="file-downloads">
+                    ${result.files.map(file => `
+                        <div class="download-item">
+                            <span>${file.name}</span>
+                            <a href="/api/download/${file.path}" class="btn btn-small" download>Download</a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('progress-section').style.display = 'none';
+            document.getElementById('results-section').style.display = 'block';
+
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <p>Error: ${message}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+# E-Book Maker - Python Dependencies
+
+# Web Frameworks
+Flask>=2.3.0
+streamlit>=1.30.0
+
+# Image Processing (for cover generation and watermarking)
+Pillow>=10.0.0
+
+# PDF Processing (for watermarking)
+PyPDF2>=3.0.0
+reportlab>=4.0.0
+
+# DOCX Processing (for Word document watermarking and page numbering)
+python-docx>=0.8.11
+
+# PDF Utilities (for PDF cover input and processing)
+PyMuPDF>=1.23.0
+
+# PDF Generation Engine (Python-based alternative to wkhtmltopdf/pdflatex)
+weasyprint>=60.0
+
+# QR Code Generation (for cover barcodes and watermarks)
+qrcode>=7.4.0
+
+# Additional utilities
+Werkzeug>=2.3.0
+
+# AI Assistant (for intelligent features)
+groq>=0.4.0
+
+# Optional: For enhanced terminal UI (not required)
+# rich>=13.0.0
+
+# Note: System dependencies (install separately):
+# - pandoc (REQUIRED for document conversion)
+# - wkhtmltopdf (OPTIONAL for PDF generation)
+# - pdflatex/texlive (OPTIONAL for advanced PDF formatting)
+# - weasyprint is included above as a Python PDF engine (no system install needed!)

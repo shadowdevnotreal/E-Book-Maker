@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Marketing Wizard - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+    <style>
+        /* Wizard-specific styles */
+        .wizard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .wizard-progress::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: -1;
+        }
+
+        .wizard-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .wizard-step.active .step-circle {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .wizard-step.completed .step-circle {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .wizard-step.active .step-label {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .wizard-content {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .step-container {
+            display: none;
+        }
+
+        .step-container.active {
+            display: block;
+        }
+
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 10px;
+        }
+
+        .wizard-nav button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-skip {
+            background: transparent;
+            color: #6b7280;
+            text-decoration: underline;
+        }
+
+        .btn-skip:hover {
+            color: #374151;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-section input,
+        .form-section select,
+        .form-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-section textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .generation-card {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .generation-card.generated {
+            border-color: #10b981;
+            border-style: solid;
+            background: #f0fdf4;
+        }
+
+        .generation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .generation-title {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .generation-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .generated-content {
+            display: none;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .generated-content.show {
+            display: block;
+        }
+
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        .export-section {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .character-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .auto-save-indicator.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">AI Marketing Wizard</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing" class="active">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="wizard-container">
+            <!-- Project Actions Bar -->
+            <div style="display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="newProject()">
+                        ✨ New Project
+                    </button>
+                    <button class="btn btn-secondary" onclick="newProject()">Reset</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="saveCurrentProject()">
+                        💾 Save Project
+                    </button>
+                    <button class="btn btn-primary" onclick="showLoadProjectModal()">
+                        📂 Load Project
+                    </button>
+                    <button class="btn btn-primary" onclick="importProject()">
+                        📥 Import Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="wizard-progress">
+                <div class="wizard-step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Book Details</div>
+                </div>
+                <div class="wizard-step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Generate Content</div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Polish Content</div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Marketing</div>
+                </div>
+            </div>
+
+            <div class="wizard-content">
+                <!-- Step 1: Book Details -->
+                <div class="step-container active" id="step-1">
+                    <h2>Tell Us About Your Book</h2>
+                    <p style="color: #6b7280; margin-bottom: 30px;">Let's start by gathering some basic information. This will be used throughout the wizard.</p>
+
+                    <div class="form-section">
+                        <label for="book-title">Book Title *</label>
+                        <input type="text" id="book-title" placeholder="Enter your book title" required>
+                    </div>
+
+                    <div class="form-section">
+                        <label for="book-genre">Genre *</label>
+                        <select id="book-genre" required>
+                            <option value="">Select genre...</option>
+                            <option value="fiction">Fiction</option>
+                            <option value="non-fiction">Non-Fiction</option>
+                            <option value="mystery">Mystery/Thriller</option>
+                            <option value="romance">Romance</option>
+                            <option value="scifi">Science Fiction</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="biography">Biography/Memoir</option>
+                            <option value="selfhelp">Self-Help</option>
+                            <option value="business">Business</option>
+                            <option value="history">History</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-section">
+                        <label for="book-audience">Target Audience *</label>
+                        <input type="text" id="book-audience" placeholder="e.g., Young adults, Business professionals, History enthusiasts" required>
+                    </div>
+
+                    <div class="form-section">
+                        <label for="book-concept">Brief Concept/Summary *</label>
+                        <textarea id="book-concept" placeholder="Describe your book concept in a few sentences. This helps AI understand your project." required></textarea>
+                        <div class="character-count">
+                            <span id="concept-char-count">0</span> characters
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Generate Content -->
+                <div class="step-container" id="step-2">
+                    <h2>Generate Content</h2>
+                    <p style="color: #6b7280; margin-bottom: 30px;">Let AI help you create chapter outlines and book descriptions. Generate what you need, skip what you don't.</p>
+
+                    <!-- Chapter Outline -->
+                    <div class="generation-card" id="outline-card">
+                        <div class="generation-header">
+                            <div class="generation-title">Chapter Outline</div>
+                            <div class="generation-actions">
+                                <label for="outline-chapters" style="margin-right: 10px;">Chapters:</label>
+                                <select id="outline-chapters" style="width: 80px; padding: 5px;">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="15">15</option>
+                                    <option value="20">20</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="generateOutline()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="loading-indicator" id="outline-loading">Generating outline...</div>
+                        <div class="generated-content" id="outline-content">
+                            <textarea id="outline-text" style="width: 100%; min-height: 200px;"></textarea>
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <button class="btn btn-warning" onclick="regenerateOutline()">Regenerate</button>
+                                <button class="btn btn-secondary" onclick="clearOutline()">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book Description -->
+                    <div class="generation-card" id="description-card">
+                        <div class="generation-header">
+                            <div class="generation-title">Book Description</div>
+                            <div class="generation-actions">
+                                <label for="description-length" style="margin-right: 10px;">Length:</label>
+                                <select id="description-length" style="width: 120px; padding: 5px;">
+                                    <option value="short">Short (50-75)</option>
+                                    <option value="medium" selected>Medium (100-150)</option>
+                                    <option value="long">Long (200-300)</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="generateDescription()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="loading-indicator" id="description-loading">Generating description...</div>
+                        <div class="generated-content" id="description-content">
+                            <textarea id="description-text" style="width: 100%; min-height: 150px;"></textarea>
+                            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                                <button class="btn btn-warning" onclick="regenerateDescription()">Regenerate</button>
+                                <button class="btn btn-secondary" onclick="clearDescription()">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Polish Content -->
+                <div class="step-container" id="step-3">
+                    <h2>Polish Your Content</h2>
+                    <p style="color: #6b7280; margin-bottom: 30px;">Review and enhance your generated content. Make any edits or improvements.</p>
+
+                    <div class="form-section">
+                        <label>Chapter Outline</label>
+                        <textarea id="polish-outline" style="width: 100%; min-height: 200px;" placeholder="No outline generated yet"></textarea>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="improveGrammar('outline')">Fix Grammar</button>
+                            <button class="btn btn-primary" onclick="simplifyText('outline')">Simplify</button>
+                            <button class="btn btn-primary" onclick="expandText('outline')">Expand</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label>Book Description</label>
+                        <textarea id="polish-description" style="width: 100%; min-height: 150px;" placeholder="No description generated yet"></textarea>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <button class="btn btn-primary" onclick="improveGrammar('description')">Fix Grammar</button>
+                            <button class="btn btn-primary" onclick="makeEngaging('description')">Make Engaging</button>
+                            <button class="btn btn-primary" onclick="addKeywords('description')">Add Keywords</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Marketing Materials -->
+                <div class="step-container" id="step-4">
+                    <h2>Marketing Materials</h2>
+                    <p style="color: #6b7280; margin-bottom: 30px;">Generate professional marketing content for your book.</p>
+
+                    <!-- Keywords -->
+                    <div class="generation-card" id="keywords-card">
+                        <div class="generation-header">
+                            <div class="generation-title">Amazon Keywords</div>
+                            <div class="generation-actions">
+                                <button class="btn btn-primary" onclick="generateKeywords()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="loading-indicator" id="keywords-loading">Generating keywords...</div>
+                        <div class="generated-content" id="keywords-content">
+                            <div id="keywords-list" style="margin-bottom: 15px;"></div>
+                            <button class="btn btn-success" onclick="copyKeywords()">Copy All</button>
+                        </div>
+                    </div>
+
+                    <!-- Social Posts -->
+                    <div class="generation-card" id="social-card">
+                        <div class="generation-header">
+                            <div class="generation-title">Social Media Posts</div>
+                            <div class="generation-actions">
+                                <button class="btn btn-primary" onclick="generateSocialPosts()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="loading-indicator" id="social-loading">Generating posts...</div>
+                        <div class="generated-content" id="social-content">
+                            <div id="social-posts" style="margin-bottom: 15px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Blurbs -->
+                    <div class="generation-card" id="blurb-card">
+                        <div class="generation-header">
+                            <div class="generation-title">Book Blurbs (3 Variations)</div>
+                            <div class="generation-actions">
+                                <button class="btn btn-primary" onclick="generateBlurbs()">Generate</button>
+                            </div>
+                        </div>
+                        <div class="loading-indicator" id="blurb-loading">Generating blurbs...</div>
+                        <div class="generated-content" id="blurb-content">
+                            <div id="blurb-list" style="margin-bottom: 15px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Export Section -->
+                    <div class="export-section">
+                        <h3 style="margin-top: 0;">Export Everything</h3>
+                        <div class="export-buttons">
+                            <button class="btn btn-success" onclick="exportAll()">Download All Content</button>
+                            <button class="btn btn-success" onclick="copyAll()">Copy All to Clipboard</button>
+                            <button class="btn btn-secondary" onclick="startOver()">Start Over</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-nav">
+                    <button class="btn btn-secondary" onclick="prevStep()" id="btn-back" style="display: none;">← Back</button>
+                    <div style="flex-grow: 1;"></div>
+                    <button class="btn-skip" onclick="nextStep()" id="btn-skip">Skip →</button>
+                    <button class="btn btn-primary" onclick="nextStep()" id="btn-next">Next →</button>
+                    <button class="btn btn-primary" onclick="finishWizard()" id="btn-finish" style="display: none;">Finish</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto-save indicator -->
+        <div class="auto-save-indicator" id="auto-save-indicator">
+            Saved ✓
+        </div>
+
+        <!-- Load Project Modal -->
+        <div id="load-project-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: white; border-radius: 12px; max-width: 800px; width: 90%; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">Load Marketing Project</h3>
+                    <button onclick="closeLoadProjectModal()" style="background: transparent; border: none; font-size: 24px; cursor: pointer; color: #6b7280;">&times;</button>
+                </div>
+                <div id="project-list-container" style="padding: 20px; overflow-y: auto; flex: 1;">
+                    <div id="project-list">Loading projects...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import File Input (hidden) -->
+        <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // Wizard State
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        // Auto-save interval
+        let autoSaveTimer = null;
+
+        // Initialize wizard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            updateCharacterCount();
+            setupAutoSave();
+            updateNavigation();
+
+            // Character counter
+            document.getElementById('book-concept').addEventListener('input', updateCharacterCount);
+        });
+
+        function updateCharacterCount() {
+            const textarea = document.getElementById('book-concept');
+            const count = textarea.value.length;
+            document.getElementById('concept-char-count').textContent = count;
+        }
+
+        // Navigation Functions
+        function nextStep() {
+            if (currentStep === 1 && !validateStep1()) {
+                toastError('Please fill in all required fields');
+                return;
+            }
+
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateSteps();
+                saveToLocalStorage();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateSteps();
+            }
+        }
+
+        function updateSteps() {
+            // Hide all steps
+            document.querySelectorAll('.step-container').forEach(step => {
+                step.classList.remove('active');
+            });
+
+            // Show current step
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+
+            // Update progress bar
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                } else if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+
+            // Update navigation
+            updateNavigation();
+
+            // Sync content when moving to step 3
+            if (currentStep === 3) {
+                syncPolishContent();
+            }
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function updateNavigation() {
+            const btnBack = document.getElementById('btn-back');
+            const btnNext = document.getElementById('btn-next');
+            const btnFinish = document.getElementById('btn-finish');
+            const btnSkip = document.getElementById('btn-skip');
+
+            // Back button
+            btnBack.style.display = currentStep > 1 ? 'block' : 'none';
+
+            // Next/Finish buttons
+            if (currentStep === totalSteps) {
+                btnNext.style.display = 'none';
+                btnFinish.style.display = 'block';
+                btnSkip.style.display = 'none';
+            } else {
+                btnNext.style.display = 'block';
+                btnFinish.style.display = 'none';
+                btnSkip.style.display = currentStep > 1 ? 'block' : 'none';
+            }
+        }
+
+        function validateStep1() {
+            const title = document.getElementById('book-title').value.trim();
+            const genre = document.getElementById('book-genre').value;
+            const audience = document.getElementById('book-audience').value.trim();
+            const concept = document.getElementById('book-concept').value.trim();
+
+            return title && genre && audience && concept;
+        }
+
+        function finishWizard() {
+            toastSuccess('Wizard completed! Your marketing materials are ready.');
+            // Could add additional logic here
+        }
+
+        // LocalStorage Functions
+        function setupAutoSave() {
+            const inputs = ['book-title', 'book-genre', 'book-audience', 'book-concept',
+                           'outline-text', 'description-text', 'polish-outline', 'polish-description'];
+
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimer);
+                        autoSaveTimer = setTimeout(() => {
+                            saveToLocalStorage();
+                            showAutoSaveIndicator();
+                        }, 3000);
+                    });
+                }
+            });
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                currentStep: currentStep,
+                bookTitle: document.getElementById('book-title').value,
+                bookGenre: document.getElementById('book-genre').value,
+                bookAudience: document.getElementById('book-audience').value,
+                bookConcept: document.getElementById('book-concept').value,
+                outlineText: document.getElementById('outline-text').value,
+                descriptionText: document.getElementById('description-text').value,
+                polishOutline: document.getElementById('polish-outline').value,
+                polishDescription: document.getElementById('polish-description').value
+            };
+
+            localStorage.setItem('marketingWizard', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('marketingWizard');
+            if (!saved) return;
+
+            try {
+                const data = JSON.parse(saved);
+
+                document.getElementById('book-title').value = data.bookTitle || '';
+                document.getElementById('book-genre').value = data.bookGenre || '';
+                document.getElementById('book-audience').value = data.bookAudience || '';
+                document.getElementById('book-concept').value = data.bookConcept || '';
+                document.getElementById('outline-text').value = data.outlineText || '';
+                document.getElementById('description-text').value = data.descriptionText || '';
+                document.getElementById('polish-outline').value = data.polishOutline || '';
+                document.getElementById('polish-description').value = data.polishDescription || '';
+
+                // Show generated content if exists
+                if (data.outlineText) {
+                    document.getElementById('outline-card').classList.add('generated');
+                    document.getElementById('outline-content').classList.add('show');
+                }
+                if (data.descriptionText) {
+                    document.getElementById('description-card').classList.add('generated');
+                    document.getElementById('description-content').classList.add('show');
+                }
+            } catch (e) {
+                console.error('Error loading saved data:', e);
+            }
+        }
+
+        function showAutoSaveIndicator() {
+            const indicator = document.getElementById('auto-save-indicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // Content Generation Functions
+        async function generateOutline() {
+            if (!validateStep1()) {
+                toastError('Please complete book details first');
+                currentStep = 1;
+                updateSteps();
+                return;
+            }
+
+            const chapters = document.getElementById('outline-chapters').value;
+            const loading = document.getElementById('outline-loading');
+            const content = document.getElementById('outline-content');
+            const button = event.target;
+
+            button.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Generate a detailed ${chapters}-chapter outline for a ${document.getElementById('book-genre').value} book titled "${document.getElementById('book-title').value}". Target audience: ${document.getElementById('book-audience').value}. Concept: ${document.getElementById('book-concept').value}. Format as: Chapter 1: [Title] - [2-3 sentence summary]`,
+                        max_tokens: 1000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('outline-text').value = result.text;
+                    document.getElementById('outline-card').classList.add('generated');
+                    content.classList.add('show');
+                    saveToLocalStorage();
+                    toastSuccess('Chapter outline generated!');
+                } else {
+                    toastError('Failed to generate outline: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        async function generateDescription() {
+            if (!validateStep1()) {
+                toastError('Please complete book details first');
+                currentStep = 1;
+                updateSteps();
+                return;
+            }
+
+            const length = document.getElementById('description-length').value;
+            const loading = document.getElementById('description-loading');
+            const content = document.getElementById('description-content');
+            const button = event.target;
+
+            const wordCounts = { short: '50-75', medium: '100-150', long: '200-300' };
+
+            button.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Write a compelling ${wordCounts[length]}-word book description for "${document.getElementById('book-title').value}", a ${document.getElementById('book-genre').value} book. Target audience: ${document.getElementById('book-audience').value}. Concept: ${document.getElementById('book-concept').value}. Make it engaging and marketable.`,
+                        max_tokens: 500
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('description-text').value = result.text;
+                    document.getElementById('description-card').classList.add('generated');
+                    content.classList.add('show');
+                    saveToLocalStorage();
+                    toastSuccess('Description generated!');
+                } else {
+                    toastError('Failed to generate description: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        function regenerateOutline() {
+            document.getElementById('outline-text').value = '';
+            generateOutline();
+        }
+
+        function regenerateDescription() {
+            document.getElementById('description-text').value = '';
+            generateDescription();
+        }
+
+        function clearOutline() {
+            document.getElementById('outline-text').value = '';
+            document.getElementById('outline-card').classList.remove('generated');
+            document.getElementById('outline-content').classList.remove('show');
+            saveToLocalStorage();
+        }
+
+        function clearDescription() {
+            document.getElementById('description-text').value = '';
+            document.getElementById('description-card').classList.remove('generated');
+            document.getElementById('description-content').classList.remove('show');
+            saveToLocalStorage();
+        }
+
+        // Polish Functions
+        function syncPolishContent() {
+            const outlineText = document.getElementById('outline-text').value;
+            const descriptionText = document.getElementById('description-text').value;
+
+            if (outlineText) {
+                document.getElementById('polish-outline').value = outlineText;
+            }
+            if (descriptionText) {
+                document.getElementById('polish-description').value = descriptionText;
+            }
+        }
+
+        async function improveGrammar(type) {
+            const textareaId = `polish-${type}`;
+            const textarea = document.getElementById(textareaId);
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                toastError('No content to improve');
+                return;
+            }
+
+            textarea.disabled = true;
+            toastInfo('Improving grammar...');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Fix grammar and spelling errors in this text, but keep the style and meaning the same:\n\n${originalText}`,
+                        max_tokens: 1000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    textarea.value = result.text;
+                    saveToLocalStorage();
+                    toastSuccess('Grammar improved!');
+                } else {
+                    toastError('Failed to improve grammar');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                textarea.disabled = false;
+            }
+        }
+
+        async function simplifyText(type) {
+            const textareaId = `polish-${type}`;
+            const textarea = document.getElementById(textareaId);
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                toastError('No content to simplify');
+                return;
+            }
+
+            textarea.disabled = true;
+            toastInfo('Simplifying text...');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Simplify this text to make it easier to read, while keeping the key points:\n\n${originalText}`,
+                        max_tokens: 1000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    textarea.value = result.text;
+                    saveToLocalStorage();
+                    toastSuccess('Text simplified!');
+                } else {
+                    toastError('Failed to simplify text');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                textarea.disabled = false;
+            }
+        }
+
+        async function expandText(type) {
+            const textareaId = `polish-${type}`;
+            const textarea = document.getElementById(textareaId);
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                toastError('No content to expand');
+                return;
+            }
+
+            textarea.disabled = true;
+            toastInfo('Expanding text...');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Expand this text with more details and examples, making it more comprehensive:\n\n${originalText}`,
+                        max_tokens: 1500
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    textarea.value = result.text;
+                    saveToLocalStorage();
+                    toastSuccess('Text expanded!');
+                } else {
+                    toastError('Failed to expand text');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                textarea.disabled = false;
+            }
+        }
+
+        async function makeEngaging(type) {
+            const textareaId = `polish-${type}`;
+            const textarea = document.getElementById(textareaId);
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                toastError('No content to enhance');
+                return;
+            }
+
+            textarea.disabled = true;
+            toastInfo('Making text more engaging...');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Rewrite this text to be more engaging, compelling, and emotionally resonant:\n\n${originalText}`,
+                        max_tokens: 1000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    textarea.value = result.text;
+                    saveToLocalStorage();
+                    toastSuccess('Text enhanced!');
+                } else {
+                    toastError('Failed to enhance text');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                textarea.disabled = false;
+            }
+        }
+
+        async function addKeywords(type) {
+            const textareaId = `polish-${type}`;
+            const textarea = document.getElementById(textareaId);
+            const originalText = textarea.value;
+
+            if (!originalText) {
+                toastError('No content to enhance');
+                return;
+            }
+
+            textarea.disabled = true;
+            toastInfo('Adding keywords...');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Rewrite this book description to naturally include relevant keywords that would help with Amazon SEO:\n\n${originalText}`,
+                        max_tokens: 1000
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    textarea.value = result.text;
+                    saveToLocalStorage();
+                    toastSuccess('Keywords added!');
+                } else {
+                    toastError('Failed to add keywords');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                textarea.disabled = false;
+            }
+        }
+
+        // Marketing Generation Functions
+        async function generateKeywords() {
+            if (!validateStep1()) {
+                toastError('Please complete book details first');
+                return;
+            }
+
+            const loading = document.getElementById('keywords-loading');
+            const content = document.getElementById('keywords-content');
+            const list = document.getElementById('keywords-list');
+            const button = event.target;
+
+            button.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Generate 10 highly relevant Amazon KDP keywords for a ${document.getElementById('book-genre').value} book titled "${document.getElementById('book-title').value}". Target audience: ${document.getElementById('book-audience').value}. Format: one keyword per line, no numbers.`,
+                        max_tokens: 200
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const keywords = result.text.split('\n').filter(k => k.trim());
+                    list.innerHTML = '<ol style="margin: 0; padding-left: 20px;">' +
+                        keywords.map(k => `<li>${k.trim()}</li>`).join('') +
+                        '</ol>';
+
+                    document.getElementById('keywords-card').classList.add('generated');
+                    content.classList.add('show');
+                    toastSuccess('Keywords generated!');
+                } else {
+                    toastError('Failed to generate keywords');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        async function generateSocialPosts() {
+            if (!validateStep1()) {
+                toastError('Please complete book details first');
+                return;
+            }
+
+            const loading = document.getElementById('social-loading');
+            const content = document.getElementById('social-content');
+            const posts = document.getElementById('social-posts');
+            const button = event.target;
+
+            button.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Create 3 engaging social media posts (Twitter/Facebook style) to promote the book "${document.getElementById('book-title').value}". Genre: ${document.getElementById('book-genre').value}. Include hooks, call-to-actions, and relevant hashtags.`,
+                        max_tokens: 500
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const postList = result.text.split('\n\n').filter(p => p.trim());
+                    posts.innerHTML = postList.map((post, i) => `
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600; margin-bottom: 10px;">Post ${i + 1}</div>
+                            <div style="margin-bottom: 10px;">${post}</div>
+                            <button class="btn btn-success" onclick="copyText('${post.replace(/'/g, "\\'")}')">Copy</button>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('social-card').classList.add('generated');
+                    content.classList.add('show');
+                    toastSuccess('Social posts generated!');
+                } else {
+                    toastError('Failed to generate posts');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        async function generateBlurbs() {
+            if (!validateStep1()) {
+                toastError('Please complete book details first');
+                return;
+            }
+
+            const loading = document.getElementById('blurb-loading');
+            const content = document.getElementById('blurb-content');
+            const list = document.getElementById('blurb-list');
+            const button = event.target;
+
+            button.disabled = true;
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: `Write 3 different promotional blurbs for "${document.getElementById('book-title').value}" (${document.getElementById('book-genre').value}). Make them compelling and different in tone: 1) Short & punchy (30 words), 2) Medium & descriptive (75 words), 3) Long & detailed (150 words). Separate with "---".`,
+                        max_tokens: 800
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const blurbs = result.text.split('---').filter(b => b.trim());
+                    const titles = ['Short Version (30 words)', 'Medium Version (75 words)', 'Long Version (150 words)'];
+
+                    list.innerHTML = blurbs.map((blurb, i) => `
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600; margin-bottom: 10px;">${titles[i] || `Version ${i + 1}`}</div>
+                            <div style="margin-bottom: 10px;">${blurb.trim()}</div>
+                            <button class="btn btn-success" onclick="copyText('${blurb.trim().replace(/'/g, "\\'")}')">Copy</button>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('blurb-card').classList.add('generated');
+                    content.classList.add('show');
+                    toastSuccess('Blurbs generated!');
+                } else {
+                    toastError('Failed to generate blurbs');
+                }
+            } catch (error) {
+                toastError('Error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+
+        // Export Functions
+        function copyKeywords() {
+            const list = document.getElementById('keywords-list');
+            const text = Array.from(list.querySelectorAll('li')).map(li => li.textContent).join('\n');
+            copyText(text);
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                toastSuccess('Copied to clipboard!');
+            }).catch(err => {
+                toastError('Failed to copy');
+            });
+        }
+
+        function exportAll() {
+            const data = {
+                title: document.getElementById('book-title').value,
+                genre: document.getElementById('book-genre').value,
+                audience: document.getElementById('book-audience').value,
+                concept: document.getElementById('book-concept').value,
+                outline: document.getElementById('polish-outline').value,
+                description: document.getElementById('polish-description').value,
+                keywords: Array.from(document.querySelectorAll('#keywords-list li')).map(li => li.textContent).join('\n'),
+                socialPosts: Array.from(document.querySelectorAll('#social-posts > div')).map(div => div.querySelector('div:nth-child(2)').textContent).join('\n\n'),
+                blurbs: Array.from(document.querySelectorAll('#blurb-list > div')).map(div => div.querySelector('div:nth-child(2)').textContent).join('\n\n---\n\n')
+            };
+
+            const content = `
+BOOK MARKETING MATERIALS
+Generated: ${new Date().toLocaleString()}
+
+========================
+BOOK DETAILS
+========================
+Title: ${data.title}
+Genre: ${data.genre}
+Target Audience: ${data.audience}
+
+Concept:
+${data.concept}
+
+========================
+CHAPTER OUTLINE
+========================
+${data.outline || 'Not generated'}
+
+========================
+BOOK DESCRIPTION
+========================
+${data.description || 'Not generated'}
+
+========================
+AMAZON KEYWORDS
+========================
+${data.keywords || 'Not generated'}
+
+========================
+SOCIAL MEDIA POSTS
+========================
+${data.socialPosts || 'Not generated'}
+
+========================
+BOOK BLURBS
+========================
+${data.blurbs || 'Not generated'}
+            `.trim();
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${data.title.replace(/[^a-z0-9]/gi, '_')}_marketing_materials.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            toastSuccess('Content exported!');
+        }
+
+        function copyAll() {
+            const data = {
+                title: document.getElementById('book-title').value,
+                genre: document.getElementById('book-genre').value,
+                audience: document.getElementById('book-audience').value,
+                concept: document.getElementById('book-concept').value,
+                outline: document.getElementById('polish-outline').value,
+                description: document.getElementById('polish-description').value
+            };
+
+            const content = `
+${data.title}
+${data.genre} | ${data.audience}
+
+${data.concept}
+
+OUTLINE:
+${data.outline}
+
+DESCRIPTION:
+${data.description}
+            `.trim();
+
+            copyText(content);
+        }
+
+        function startOver() {
+            if (confirm('Are you sure you want to start over? All data will be lost.')) {
+                localStorage.removeItem('marketingWizard');
+                location.reload();
+            }
+        }
+
+        // ========================================
+        // PROJECT MANAGEMENT FUNCTIONS
+        // ========================================
+
+        // User settings
+        let userSettings = { storage: 'local', autosave_interval: 3 };
+
+        // Load user settings from API
+        async function loadUserSettings() {
+            try {
+                const response = await fetch('/api/settings/get-preferences');
+                const data = await response.json();
+                if (data.success) {
+                    userSettings = data;
+                    console.log('User settings loaded:', userSettings);
+                }
+            } catch (error) {
+                console.error('Failed to load user settings:', error);
+            }
+        }
+
+        // Collect current wizard data
+        function collectProjectData() {
+            return {
+                title: document.getElementById('book-title').value,
+                genre: document.getElementById('book-genre').value,
+                audience: document.getElementById('book-audience').value,
+                concept: document.getElementById('book-concept').value,
+                outline: document.getElementById('polish-outline').value || document.getElementById('outline-text').value,
+                description: document.getElementById('polish-description').value || document.getElementById('description-text').value,
+                keywords: Array.from(document.querySelectorAll('#keywords-list li')).map(li => li.textContent),
+                socialPosts: Array.from(document.querySelectorAll('#social-posts > div')).map(div => {
+                    const textDiv = div.querySelector('div:nth-child(2)');
+                    return textDiv ? textDiv.textContent : '';
+                }).filter(text => text),
+                blurbs: Array.from(document.querySelectorAll('#blurb-list > div')).map(div => {
+                    const textDiv = div.querySelector('div:nth-child(2)');
+                    return textDiv ? textDiv.textContent : '';
+                }).filter(text => text)
+            };
+        }
+
+        // Save current project
+        async function saveCurrentProject() {
+            const data = collectProjectData();
+
+            if (!data.title) {
+                toastError('Please enter a book title before saving');
+                return;
+            }
+
+            const button = event.target;
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/marketing/save-project', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: data.title,
+                        data: data
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    toastSuccess(`Project "${data.title}" saved successfully!`);
+
+                    // Also save to localStorage for browser storage compatibility
+                    saveToLocalStorage();
+                } else {
+                    toastError('Failed to save project: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                toastError('Error saving project: ' + error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // Enhanced auto-save with file system support
+        async function enhancedAutoSave() {
+            // Always save to localStorage
+            saveToLocalStorage();
+
+            // If user preference is local file system, also save there
+            if (userSettings.storage === 'local') {
+                const data = collectProjectData();
+
+                // Only auto-save to file if there's a title
+                if (data.title) {
+                    try {
+                        await fetch('/api/marketing/save-project', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: data.title,
+                                data: data
+                            })
+                        });
+                        console.log('Auto-saved to file system');
+                    } catch (error) {
+                        console.error('Auto-save to file failed:', error);
+                    }
+                }
+            }
+
+            showAutoSaveIndicator();
+        }
+
+        // Update setupAutoSave to use enhanced version
+        function setupAutoSave() {
+            const inputs = ['book-title', 'book-genre', 'book-audience', 'book-concept',
+                           'outline-text', 'description-text', 'polish-outline', 'polish-description'];
+
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', () => {
+                        clearTimeout(autoSaveTimer);
+                        autoSaveTimer = setTimeout(() => {
+                            enhancedAutoSave();
+                        }, (userSettings.autosave_interval || 3) * 1000);
+                    });
+                }
+            });
+        }
+
+        // Show load project modal
+        async function showLoadProjectModal() {
+            const modal = document.getElementById('load-project-modal');
+            modal.style.display = 'flex';
+
+            await loadProjectList();
+        }
+
+        // Close load project modal
+        function closeLoadProjectModal() {
+            const modal = document.getElementById('load-project-modal');
+            modal.style.display = 'none';
+        }
+
+        // Load project list
+        async function loadProjectList() {
+            const listContainer = document.getElementById('project-list');
+            listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #6b7280;">Loading projects...</div>';
+
+            try {
+                const response = await fetch('/api/marketing/list-projects');
+                const data = await response.json();
+
+                if (data.success && data.projects.length > 0) {
+                    listContainer.innerHTML = data.projects.map(project => `
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 5px;">${project.name}</div>
+                                    <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 5px;">
+                                        <strong>Title:</strong> ${project.title || 'N/A'} |
+                                        <strong>Genre:</strong> ${project.genre || 'N/A'}
+                                    </div>
+                                    <div style="color: #9ca3af; font-size: 0.75rem;">
+                                        Created: ${new Date(project.created).toLocaleDateString()}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" style="font-size: 0.875rem; padding: 6px 12px;" onclick="loadProjectByFilename('${project.filename}')">📂 Load</button>
+                                <button class="btn btn-primary" style="font-size: 0.875rem; padding: 6px 12px;" onclick="exportProjectByFilename('${project.filename}')">📥 Export</button>
+                                <button class="btn btn-secondary" style="font-size: 0.875rem; padding: 6px 12px;" onclick="renameProjectByFilename('${project.filename}', '${project.name.replace(/'/g, "\\'")}')">✏️ Rename</button>
+                                <button class="btn btn-danger" style="font-size: 0.875rem; padding: 6px 12px;" onclick="deleteProjectByFilename('${project.filename}', '${project.name.replace(/'/g, "\\'")}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else if (data.success && data.projects.length === 0) {
+                    listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">No saved projects found. Create your first project!</div>';
+                } else {
+                    listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #ef4444;">Failed to load projects</div>';
+                }
+            } catch (error) {
+                listContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: #ef4444;">Error loading projects: ' + error.message + '</div>';
+            }
+        }
+
+        // Load specific project
+        async function loadProjectByFilename(filename) {
+            try {
+                const response = await fetch(`/api/marketing/load-project/${filename}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const project = data.project;
+
+                    // Populate form fields
+                    document.getElementById('book-title').value = project.data.title || '';
+                    document.getElementById('book-genre').value = project.data.genre || '';
+                    document.getElementById('book-audience').value = project.data.audience || '';
+                    document.getElementById('book-concept').value = project.data.concept || '';
+                    document.getElementById('outline-text').value = project.data.outline || '';
+                    document.getElementById('description-text').value = project.data.description || '';
+                    document.getElementById('polish-outline').value = project.data.outline || '';
+                    document.getElementById('polish-description').value = project.data.description || '';
+
+                    // Show generated content if exists
+                    if (project.data.outline) {
+                        document.getElementById('outline-card').classList.add('generated');
+                        document.getElementById('outline-content').classList.add('show');
+                    }
+                    if (project.data.description) {
+                        document.getElementById('description-card').classList.add('generated');
+                        document.getElementById('description-content').classList.add('show');
+                    }
+
+                    // Load keywords
+                    if (project.data.keywords && project.data.keywords.length > 0) {
+                        const keywordsList = document.getElementById('keywords-list');
+                        keywordsList.innerHTML = '<ol style="margin: 0; padding-left: 20px;">' +
+                            project.data.keywords.map(k => `<li>${k}</li>`).join('') +
+                            '</ol>';
+                        document.getElementById('keywords-card').classList.add('generated');
+                        document.getElementById('keywords-content').classList.add('show');
+                    }
+
+                    // Load social posts
+                    if (project.data.socialPosts && project.data.socialPosts.length > 0) {
+                        const socialPosts = document.getElementById('social-posts');
+                        socialPosts.innerHTML = project.data.socialPosts.map((post, i) => `
+                            <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                                <div style="font-weight: 600; margin-bottom: 10px;">Post ${i + 1}</div>
+                                <div style="margin-bottom: 10px;">${post}</div>
+                                <button class="btn btn-success" onclick="copyText('${post.replace(/'/g, "\\'")}')">Copy</button>
+                            </div>
+                        `).join('');
+                        document.getElementById('social-card').classList.add('generated');
+                        document.getElementById('social-content').classList.add('show');
+                    }
+
+                    // Load blurbs
+                    if (project.data.blurbs && project.data.blurbs.length > 0) {
+                        const blurbList = document.getElementById('blurb-list');
+                        const titles = ['Short Version (30 words)', 'Medium Version (75 words)', 'Long Version (150 words)'];
+                        blurbList.innerHTML = project.data.blurbs.map((blurb, i) => `
+                            <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                                <div style="font-weight: 600; margin-bottom: 10px;">${titles[i] || `Version ${i + 1}`}</div>
+                                <div style="margin-bottom: 10px;">${blurb}</div>
+                                <button class="btn btn-success" onclick="copyText('${blurb.replace(/'/g, "\\'")}')">Copy</button>
+                            </div>
+                        `).join('');
+                        document.getElementById('blurb-card').classList.add('generated');
+                        document.getElementById('blurb-content').classList.add('show');
+                    }
+
+                    // Update character count
+                    updateCharacterCount();
+
+                    // Save to localStorage too
+                    saveToLocalStorage();
+
+                    // Close modal
+                    closeLoadProjectModal();
+
+                    toastSuccess(`Project "${project.project_name}" loaded successfully!`);
+                } else {
+                    toastError('Failed to load project: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                toastError('Error loading project: ' + error.message);
+            }
+        }
+
+        // Delete project
+        async function deleteProjectByFilename(filename, projectName) {
+            if (!confirm(`Are you sure you want to delete "${projectName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/marketing/delete-project/${filename}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    toastSuccess(`Project "${projectName}" deleted`);
+                    await loadProjectList(); // Refresh list
+                } else {
+                    toastError('Failed to delete project: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                toastError('Error deleting project: ' + error.message);
+            }
+        }
+
+        // Import project from file
+        function importProject() {
+            document.getElementById('import-file-input').click();
+        }
+
+        // Handle imported file
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const project = JSON.parse(text);
+
+                // Validate it's a marketing project
+                if (!project.data || !project.version) {
+                    toastError('Invalid project file format');
+                    return;
+                }
+
+                // Load the project data (reuse the load function logic)
+                document.getElementById('book-title').value = project.data.title || '';
+                document.getElementById('book-genre').value = project.data.genre || '';
+                document.getElementById('book-audience').value = project.data.audience || '';
+                document.getElementById('book-concept').value = project.data.concept || '';
+                document.getElementById('outline-text').value = project.data.outline || '';
+                document.getElementById('description-text').value = project.data.description || '';
+                document.getElementById('polish-outline').value = project.data.outline || '';
+                document.getElementById('polish-description').value = project.data.description || '';
+
+                // Show content cards
+                if (project.data.outline) {
+                    document.getElementById('outline-card').classList.add('generated');
+                    document.getElementById('outline-content').classList.add('show');
+                }
+                if (project.data.description) {
+                    document.getElementById('description-card').classList.add('generated');
+                    document.getElementById('description-content').classList.add('show');
+                }
+
+                updateCharacterCount();
+                saveToLocalStorage();
+
+                toastSuccess('Project imported successfully!');
+            } catch (error) {
+                toastError('Error importing project: ' + error.message);
+            }
+
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // New Project - Clear all fields
+        function newProject() {
+            if (!confirm('Start a new project? Any unsaved changes will be lost.')) {
+                return;
+            }
+
+            // Clear all form fields
+            document.getElementById('book-title').value = '';
+            document.getElementById('book-genre').value = '';
+            document.getElementById('book-audience').value = '';
+            document.getElementById('book-concept').value = '';
+            document.getElementById('outline-text').value = '';
+            document.getElementById('description-text').value = '';
+            document.getElementById('polish-outline').value = '';
+            document.getElementById('polish-description').value = '';
+
+            // Clear generated content
+            document.getElementById('outline-card').classList.remove('generated');
+            document.getElementById('outline-content').classList.remove('show');
+            document.getElementById('description-card').classList.remove('generated');
+            document.getElementById('description-content').classList.remove('show');
+            document.getElementById('keywords-card').classList.remove('generated');
+            document.getElementById('keywords-content').classList.remove('show');
+            document.getElementById('social-card').classList.remove('generated');
+            document.getElementById('social-content').classList.remove('show');
+            document.getElementById('blurb-card').classList.remove('generated');
+            document.getElementById('blurb-content').classList.remove('show');
+
+            // Clear keywords, social posts, blurbs
+            document.getElementById('keywords-list').innerHTML = '';
+            document.getElementById('social-posts').innerHTML = '';
+            document.getElementById('blurb-list').innerHTML = '';
+
+            // Reset to step 1
+            currentStep = 1;
+            updateSteps();
+
+            // Clear localStorage
+            localStorage.removeItem('marketingWizard');
+
+            updateCharacterCount();
+            toastSuccess('New project started!');
+        }
+
+        // Export project as JSON file
+        async function exportProjectByFilename(filename) {
+            try {
+                const response = await fetch(`/api/marketing/load-project/${filename}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const project = data.project;
+                    const jsonString = JSON.stringify(project, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    toastSuccess('Project exported successfully!');
+                } else {
+                    toastError('Failed to export project');
+                }
+            } catch (error) {
+                toastError('Error exporting project: ' + error.message);
+            }
+        }
+
+        // Rename project
+        async function renameProjectByFilename(filename, currentName) {
+            const newName = prompt('Enter new project name:', currentName);
+
+            if (!newName || newName.trim() === '' || newName === currentName) {
+                return;
+            }
+
+            try {
+                // Load the project
+                const loadResponse = await fetch(`/api/marketing/load-project/${filename}`);
+                const loadData = await loadResponse.json();
+
+                if (!loadData.success) {
+                    toastError('Failed to load project for renaming');
+                    return;
+                }
+
+                // Update project name
+                loadData.project.project_name = newName.trim();
+                loadData.project.modified = new Date().toISOString();
+
+                // Save with new name
+                const saveResponse = await fetch('/api/marketing/save-project', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: newName.trim(),
+                        data: loadData.project.data
+                    })
+                });
+
+                const saveData = await saveResponse.json();
+
+                if (saveData.success) {
+                    // Delete old file
+                    await fetch(`/api/marketing/delete-project/${filename}`, {
+                        method: 'DELETE'
+                    });
+
+                    toastSuccess(`Project renamed to "${newName}"`);
+                    await loadProjectList(); // Refresh list
+                } else {
+                    toastError('Failed to save renamed project');
+                }
+            } catch (error) {
+                toastError('Error renaming project: ' + error.message);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserSettings();
+            loadFromLocalStorage();
+            updateCharacterCount();
+            setupAutoSave();
+            updateNavigation();
+
+            // Character counter
+            document.getElementById('book-concept').addEventListener('input', updateCharacterCount);
+        });
+    </script>
+</body>
+</html>

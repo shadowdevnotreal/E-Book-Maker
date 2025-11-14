@@ -1,0 +1,96 @@
+{
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5000,
+    "debug": false
+  },
+  "conversion": {
+    "default_formats": ["epub", "pdf"],
+    "normalize_text": true,
+    "include_toc": true,
+    "toc_depth": 3
+  },
+  "covers": {
+    "ebook_width": 1600,
+    "ebook_height": 2560,
+    "paperback_width": 5499,
+    "paperback_height": 3375,
+    "dpi": 300,
+    "quality": 95,
+    "default_style": "gradient",
+    "default_colors": {
+      "primary": "#667eea",
+      "secondary": "#764ba2"
+    },
+    "comment": "E-book dimensions: 1600×2560 px (portrait, 1.6:1 aspect ratio) - Amazon KDP compliant"
+  },
+  "watermarking": {
+    "default_opacity": 0.1,
+    "default_position": "center",
+    "default_text": "© 2025 Watermarked Document. All Rights Reserved."
+  },
+  "kdp": {
+    "comment": "Amazon KDP Print Book Specifications - https://kdp.amazon.com/en_US/help/topic/GVBQ3CMEQW3W2VL6",
+    "page_count": {
+      "min": 24,
+      "max": 828,
+      "comment": "Page count must be even (books are printed in signatures)"
+    },
+    "bleed_size": 0.125,
+    "dpi": 300,
+    "spine_formulas": {
+      "white_paper": 0.002252,
+      "cream_paper": 0.0025,
+      "premium_color": 0.002347,
+      "standard_color": 0.002252,
+      "comment": "Spine width in inches per page - Source: https://kdp.amazon.com/en_US/help/topic/G201834180"
+    },
+    "trim_sizes": {
+      "5x8": {"width": 5.0, "height": 8.0, "type": "bw", "popular": true},
+      "5.06x7.81": {"width": 5.06, "height": 7.81, "type": "bw", "popular": false},
+      "5.25x8": {"width": 5.25, "height": 8.0, "type": "bw", "popular": false},
+      "5.5x8.5": {"width": 5.5, "height": 8.5, "type": "bw", "popular": false},
+      "6x9": {"width": 6.0, "height": 9.0, "type": "bw", "popular": true, "recommended": true},
+      "6.14x9.21": {"width": 6.14, "height": 9.21, "type": "bw", "popular": false},
+      "6.69x9.61": {"width": 6.69, "height": 9.61, "type": "bw", "popular": false},
+      "7x10": {"width": 7.0, "height": 10.0, "type": "bw", "popular": true},
+      "7.44x9.69": {"width": 7.44, "height": 9.69, "type": "bw", "popular": false},
+      "7.5x9.25": {"width": 7.5, "height": 9.25, "type": "bw", "popular": false},
+      "8x10": {"width": 8.0, "height": 10.0, "type": "bw", "popular": false},
+      "8.25x6": {"width": 8.25, "height": 6.0, "type": "bw", "popular": false},
+      "8.25x8.25": {"width": 8.25, "height": 8.25, "type": "bw", "popular": false},
+      "8.5x11": {"width": 8.5, "height": 11.0, "type": "bw", "popular": true},
+      "comment": "Most popular sizes: 6x9 (novels), 8.5x11 (workbooks), 5x8 (pocket books), 7x10 (textbooks)"
+    },
+    "gutter_margins": {
+      "24-150": 0.375,
+      "151-300": 0.5,
+      "301-500": 0.625,
+      "501-700": 0.75,
+      "701-828": 0.875,
+      "comment": "Gutter margins in inches by page count (for perfect binding)"
+    },
+    "default_margins": {
+      "top": 0.75,
+      "bottom": 0.75,
+      "outside": 0.75,
+      "comment": "Default margins in inches (gutter calculated based on page count)"
+    },
+    "cover_safe_areas": {
+      "barcode": {
+        "width": 2.0,
+        "height": 1.2,
+        "clearance_paperback": 0.25,
+        "clearance_hardback_bottom": 0.76,
+        "clearance_hardback_spine": 0.25,
+        "comment": "Barcode safe area dimensions and clearances in inches"
+      }
+    }
+  },
+  "paths": {
+    "output": "output",
+    "uploads": "output/uploads",
+    "assets": "assets",
+    "logos": "assets/logos"
+  }
+}

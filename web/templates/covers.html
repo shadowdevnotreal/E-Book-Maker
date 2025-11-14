@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Covers - E-Book Maker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Book Cover Creation</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers" class="active">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="ai-status-container">
+            <span class="ai-status-badge" id="nav-ai-status" style="display: none;">
+                🤖 AI ENABLED • Powered by Groq
+            </span>
+        </div>
+
+        <main class="covers-page">
+            <!-- Requirements Info Section -->
+            <div class="info-banner">
+                <h3>📋 Requirements for Cover Creation</h3>
+                <div class="requirements-grid">
+                    <div class="req-item">
+                        <strong>✅ Python Packages (Auto-Installed)</strong>
+                        <p>Pillow, PyMuPDF - Automatically installed by <code>start.bat</code> (Windows) or <code>start.sh</code> (Linux/Mac)</p>
+                    </div>
+                    <div class="req-item">
+                        <strong>🖼️ Cover Features</strong>
+                        <p>Create covers from scratch • Convert PDF/images • Add spine text • KDP barcode safe area • 300 DPI print-ready</p>
+                    </div>
+                </div>
+                <details class="install-help">
+                    <summary>💡 First Time Setup (Windows)</summary>
+                    <div class="install-steps">
+                        <p><strong>Step 1:</strong> Run <code>start.bat</code> - it will automatically install all Python packages (Pillow, PyMuPDF, Flask, etc.)</p>
+                        <p><strong>Step 2:</strong> That's it! Cover creation works with just Python packages. No additional tools needed.</p>
+                        <p><strong>Note:</strong> For document conversion features (Convert page), you'll need Pandoc. See <a href="/settings">Settings</a> for installation instructions.</p>
+                    </div>
+                </details>
+            </div>
+
+            <div class="tool-section">
+                <h2>Book Cover Creation</h2>
+                <p>Design professional book covers from scratch or convert existing covers to different formats. Amazon KDP requires JPEG for ebooks and PDF for print books.</p>
+
+                <!-- Cover Mode Toggle -->
+                <div class="form-group">
+                    <label>Cover Creation Mode</label>
+                    <div class="upload-mode-toggle" style="margin-bottom: 15px;">
+                        <label class="radio-label">
+                            <input type="radio" name="cover-mode" value="create" checked onchange="switchCoverMode('create')">
+                            <span>Create New Cover</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="cover-mode" value="convert" onchange="switchCoverMode('convert')">
+                            <span>Convert Existing Cover</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Cover Tab -->
+            <div id="create-tab" class="tool-tab-content active">
+                <h2>Create Book Cover</h2>
+                <p>Design a professional book cover from scratch with custom text and styling. Amazon KDP requires different formats: <strong>JPEG for ebooks</strong>, <strong>PDF for print books</strong>.</p>
+
+                <!-- Template Gallery -->
+                <div class="template-gallery-section">
+                    <div class="section-header">
+                        <h3>🎨 Professional Templates</h3>
+                        <p>Choose from 25+ professionally designed templates to get started quickly</p>
+                    </div>
+
+                    <div class="template-filters">
+                        <button class="template-filter-btn active" data-category="all">All (25)</button>
+                        <button class="template-filter-btn" data-category="gradient">Gradient</button>
+                        <button class="template-filter-btn" data-category="dark">Dark</button>
+                        <button class="template-filter-btn" data-category="minimal">Minimal</button>
+                        <button class="template-filter-btn" data-category="business">Business</button>
+                        <button class="template-filter-btn" data-category="fiction">Fiction</button>
+                    </div>
+
+                    <div id="template-gallery" class="template-grid">
+                        <!-- Templates will be loaded dynamically -->
+                        <div class="loading-templates">Loading templates...</div>
+                    </div>
+
+                    <button type="button" id="hide-templates-btn" class="btn btn-secondary" style="width: 100%; margin-top: 16px;">
+                        ▲ Hide Templates
+                    </button>
+                </div>
+
+                <form id="create-cover-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="type">Cover Type</label>
+                            <select id="type" name="type" required>
+                                <option value="ebook">E-Book (2560 x 1600 px)</option>
+                                <option value="paperback">Paperback with Spine</option>
+                                <option value="hardback">Hardback with Dust Jacket</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="style">Style</label>
+                            <select id="style" name="style" required>
+                                <option value="gradient">Gradient Background</option>
+                                <option value="solid">Solid Color</option>
+                                <option value="minimalist">Minimalist</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-title">Book Title</label>
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <input type="text" id="cover-title" name="title" placeholder="Enter book title" required style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" onclick="aiSuggestCoverTitle()" title="Get AI title suggestions">
+                                🤖 AI Suggest
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-subtitle">Subtitle (optional)</label>
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <input type="text" id="cover-subtitle" name="subtitle" placeholder="Enter subtitle" style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" onclick="aiSuggestCoverSubtitle()" title="Get AI subtitle suggestions">
+                                🤖 AI Suggest
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cover-author">Author Name</label>
+                        <input type="text" id="cover-author" name="author" placeholder="Enter author name" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="primary-color">Primary Color</label>
+                            <input type="color" id="primary-color" name="primary_color" value="#667eea">
+                        </div>
+                        <div class="form-group">
+                            <label for="secondary-color">Secondary Color</label>
+                            <input type="color" id="secondary-color" name="secondary_color" value="#764ba2">
+                        </div>
+                    </div>
+                    <div style="margin-top: -10px; margin-bottom: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="aiSuggestColors()" title="Get AI color scheme suggestions" style="width: 100%;">
+                            🎨 AI Suggest Color Scheme
+                        </button>
+                    </div>
+
+                    <!-- Optional Background Image -->
+                    <div class="form-group">
+                        <label>Background Image (Optional)</label>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 8px;">Upload a PDF or image to use as the cover background. Leave empty for generated background.</p>
+                        <div class="file-drop-zone small" id="create-bg-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">🖼️</span>
+                                <p>Add background image/PDF</p>
+                            </div>
+                        </div>
+                        <input type="file" id="create-bg-input" name="background" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+
+                        <div id="create-bg-preview" style="display: none; margin-top: 10px;">
+                            <span id="create-bg-filename" style="color: #374151; font-size: 0.875rem;"></span>
+                            <button type="button" class="btn-remove" onclick="removeCreateBackground()">Remove</button>
+                        </div>
+                    </div>
+
+                    <!-- Spine Text Options -->
+                    <div class="form-group" id="create-spine-options" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="create-add-spine-text" name="add_spine_text" checked>
+                            Add Spine Text (title and author on spine for paperback/hardback)
+                        </label>
+                    </div>
+
+                    <!-- Barcode Safe Area -->
+                    <div class="form-group" id="create-barcode-options" style="display: none;">
+                        <label>
+                            <input type="checkbox" id="create-add-barcode" name="add_barcode" checked>
+                            Add Barcode Safe Area (KDP 2.0" × 1.2" white box on back cover)
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">Generate Cover</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetCoverForm()">Reset</button>
+                    </div>
+                </form>
+
+                <div id="cover-preview" class="preview-section" style="display: none;">
+                    <h3>Preview</h3>
+                    <div class="preview-container">
+                        <img id="preview-image" src="" alt="Cover Preview" style="display: none;">
+                        <embed id="preview-pdf" src="" type="application/pdf" width="100%" height="600px" style="display: none;">
+                    </div>
+                    <button class="btn btn-primary" onclick="downloadCover()">Download Cover</button>
+                </div>
+            </div>
+
+            <!-- Convert Cover Tab -->
+            <div id="convert-tab" class="tool-tab-content">
+                <h2>Convert Cover Format</h2>
+                <p>Convert an existing cover image to Amazon KDP-compliant format. Output: <strong>JPEG for ebooks</strong>, <strong>PDF for print books</strong>.</p>
+
+                <form id="convert-cover-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label>Upload Cover Image</label>
+                        <div class="file-drop-zone" id="cover-drop-zone">
+                            <div class="drop-zone-content">
+                                <span class="drop-icon">🖼️</span>
+                                <p>Drag & drop cover image here or click to browse</p>
+                                <p class="file-info">Supports: PDF, PNG, JPG, JPEG</p>
+                            </div>
+                        </div>
+                        <input type="file" id="cover-input" name="file" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+
+                        <div id="cover-preview-upload" class="preview-container" style="display: none;">
+                            <img id="uploaded-cover-preview" src="" alt="Uploaded Cover">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="convert-type">Convert To</label>
+                        <select id="convert-type" name="type" required>
+                            <option value="ebook">E-Book (2560 x 1600 px)</option>
+                            <option value="paperback">Paperback with Spine</option>
+                            <option value="hardback">Hardback with Dust Jacket</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="convert-add-text" name="add_text" checked>
+                            Add Text Overlay (for spine text on paperback/hardback)
+                        </label>
+                    </div>
+
+                    <div id="convert-text-fields" class="form-section">
+                        <div class="form-group">
+                            <label for="convert-title">Book Title (for spine text)</label>
+                            <input type="text" id="convert-title" name="title" placeholder="Enter book title">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="convert-author">Author (for spine text)</label>
+                            <input type="text" id="convert-author" name="author" placeholder="Enter author name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="convert-subtitle">Subtitle (optional)</label>
+                            <input type="text" id="convert-subtitle" name="subtitle" placeholder="Enter subtitle (optional)">
+                        </div>
+                    </div>
+
+                    <!-- Spine Color Options (for paperback/hardback) -->
+                    <div id="convert-spine-options" class="form-section" style="display: none;">
+                        <h3 style="font-size: 1rem; margin-bottom: 12px;">Spine Color (AI-Powered)</h3>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 12px;">Choose a custom spine color or let AI analyze your cover and suggest the best complementary color.</p>
+
+                        <div class="form-group">
+                            <label for="convert-spine-color">Spine Color</label>
+                            <input type="color" id="convert-spine-color" name="spine_color" value="#333333">
+                        </div>
+
+                        <div style="margin-top: -10px; margin-bottom: 20px;">
+                            <button type="button" class="btn btn-secondary" onclick="aiSuggestSpineColor()" title="Get AI spine color suggestion based on your cover" style="width: 100%;">
+                                🎨 AI Suggest Spine Color
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="convert-add-barcode" name="add_barcode" checked>
+                            Add Barcode Safe Area (KDP 2.0" × 1.2" white box on back cover)
+                        </label>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary btn-large">Convert Cover</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetConvertForm()">Reset</button>
+                    </div>
+                </form>
+
+                <div id="convert-results" class="results-section" style="display: none;">
+                    <h3>Conversion Complete</h3>
+                    <div id="convert-results-content"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cover-templates.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // Cover mode switching (radio buttons)
+        function switchCoverMode(mode) {
+            // Hide all tabs
+            document.querySelectorAll('.tool-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`${mode}-tab`).classList.add('active');
+        }
+
+        // Background image upload handling for Create tab
+        const createBgDropZone = document.getElementById('create-bg-drop-zone');
+        const createBgInput = document.getElementById('create-bg-input');
+        const createBgPreview = document.getElementById('create-bg-preview');
+        const createBgFilename = document.getElementById('create-bg-filename');
+
+        createBgDropZone.addEventListener('click', () => createBgInput.click());
+
+        createBgDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            createBgDropZone.classList.add('drag-over');
+        });
+
+        createBgDropZone.addEventListener('dragleave', () => {
+            createBgDropZone.classList.remove('drag-over');
+        });
+
+        createBgDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            createBgDropZone.classList.remove('drag-over');
+            createBgInput.files = e.dataTransfer.files;
+            previewCreateBackground();
+        });
+
+        createBgInput.addEventListener('change', previewCreateBackground);
+
+        function previewCreateBackground() {
+            const file = createBgInput.files[0];
+            if (file) {
+                createBgPreview.style.display = 'block';
+                createBgFilename.textContent = file.name;
+            }
+        }
+
+        function removeCreateBackground() {
+            createBgInput.value = '';
+            createBgPreview.style.display = 'none';
+            createBgFilename.textContent = '';
+        }
+
+        // Show/hide spine text and barcode options based on cover type
+        const coverTypeSelect = document.getElementById('type');
+        const createSpineOptions = document.getElementById('create-spine-options');
+        const createBarcodeOptions = document.getElementById('create-barcode-options');
+
+        coverTypeSelect.addEventListener('change', () => {
+            const showOptions = (coverTypeSelect.value === 'paperback' || coverTypeSelect.value === 'hardback');
+            createSpineOptions.style.display = showOptions ? 'block' : 'none';
+            createBarcodeOptions.style.display = showOptions ? 'block' : 'none';
+        });
+
+        // Create cover form submission
+        document.getElementById('create-cover-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            // Add checkbox values explicitly (they won't be in FormData if unchecked)
+            if (coverTypeSelect.value === 'paperback' || coverTypeSelect.value === 'hardback') {
+                const spineTextCheckbox = document.getElementById('create-add-spine-text');
+                const barcodeCheckbox = document.getElementById('create-add-barcode');
+
+                if (!spineTextCheckbox.checked) {
+                    formData.append('add_spine_text', 'false');
+                }
+                if (!barcodeCheckbox.checked) {
+                    formData.append('add_barcode', 'false');
+                }
+            }
+
+            try {
+                const response = await fetch('/api/create-cover', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('cover-preview').style.display = 'block';
+                    // Add timestamp to prevent caching
+                    const timestamp = new Date().getTime();
+                    const fileUrl = '/api/download/' + result.file + '?t=' + timestamp;
+
+                    // Store the file path for download button
+                    document.getElementById('cover-preview').setAttribute('data-file', result.file);
+
+                    // Check if file is PDF or image
+                    const previewImage = document.getElementById('preview-image');
+                    const previewPdf = document.getElementById('preview-pdf');
+
+                    if (result.file.toLowerCase().endsWith('.pdf')) {
+                        // Show PDF viewer
+                        previewImage.style.display = 'none';
+                        previewPdf.style.display = 'block';
+                        previewPdf.src = fileUrl;
+                    } else {
+                        // Show image
+                        previewPdf.style.display = 'none';
+                        previewImage.style.display = 'block';
+                        previewImage.src = fileUrl;
+                    }
+                } else {
+                    alert('Error: ' + (result.error || 'Cover generation failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // Convert cover handling
+        const coverDropZone = document.getElementById('cover-drop-zone');
+        const coverInput = document.getElementById('cover-input');
+
+        coverDropZone.addEventListener('click', () => coverInput.click());
+
+        coverDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            coverDropZone.classList.add('drag-over');
+        });
+
+        coverDropZone.addEventListener('dragleave', () => {
+            coverDropZone.classList.remove('drag-over');
+        });
+
+        coverDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            coverDropZone.classList.remove('drag-over');
+            coverInput.files = e.dataTransfer.files;
+            previewUploadedCover();
+        });
+
+        coverInput.addEventListener('change', previewUploadedCover);
+
+        function previewUploadedCover() {
+            const file = coverInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('cover-preview-upload').style.display = 'block';
+                    document.getElementById('uploaded-cover-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Toggle text overlay fields based on checkbox
+        const convertAddTextCheckbox = document.getElementById('convert-add-text');
+        const convertTextFields = document.getElementById('convert-text-fields');
+
+        convertAddTextCheckbox.addEventListener('change', () => {
+            convertTextFields.style.display = convertAddTextCheckbox.checked ? 'block' : 'none';
+        });
+
+        // Toggle spine color options based on target type
+        const convertTypeSelect = document.getElementById('convert-type');
+        const convertSpineOptions = document.getElementById('convert-spine-options');
+
+        convertTypeSelect.addEventListener('change', () => {
+            const isPrintBook = convertTypeSelect.value === 'paperback' || convertTypeSelect.value === 'hardback';
+            convertSpineOptions.style.display = isPrintBook ? 'block' : 'none';
+        });
+
+        // Convert cover form submission
+        document.getElementById('convert-cover-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/api/convert-cover', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('convert-results').style.display = 'block';
+                    document.getElementById('convert-results-content').innerHTML = `
+                        <div class="success-message">
+                            <p>${result.message}</p>
+                        </div>
+                        <div class="download-item">
+                            <a href="/api/download/${result.file}" class="btn btn-primary" download>Download Converted Cover</a>
+                        </div>
+                    `;
+                } else {
+                    alert('Error: ' + (result.error || 'Cover conversion failed'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function resetCoverForm() {
+            document.getElementById('create-cover-form').reset();
+            const coverPreview = document.getElementById('cover-preview');
+            coverPreview.style.display = 'none';
+
+            // Clear stored file path
+            coverPreview.removeAttribute('data-file');
+
+            // Reset color pickers to default values
+            document.getElementById('primary-color').value = '#667eea';
+            document.getElementById('secondary-color').value = '#764ba2';
+
+            // Clear preview images
+            document.getElementById('preview-image').src = '';
+            document.getElementById('preview-image').style.display = 'none';
+            document.getElementById('preview-pdf').src = '';
+            document.getElementById('preview-pdf').style.display = 'none';
+
+            // Remove background image if present
+            removeCreateBackground();
+
+            // Hide conditional options
+            createSpineOptions.style.display = 'none';
+            createBarcodeOptions.style.display = 'none';
+        }
+
+        function resetConvertForm() {
+            document.getElementById('convert-cover-form').reset();
+            document.getElementById('cover-file-info').innerHTML = '';
+            document.getElementById('convert-results').style.display = 'none';
+            document.getElementById('convert-text-fields').style.display = 'none';
+            document.getElementById('cover-preview-upload').style.display = 'none';
+            document.getElementById('uploaded-cover-preview').src = '';
+            document.getElementById('cover-input').value = '';
+
+            // Reset spine color picker to default value
+            document.getElementById('convert-spine-color').value = '#333333';
+
+            // Hide spine color options if visible
+            const spineOptions = document.getElementById('convert-spine-options');
+            if (spineOptions) {
+                spineOptions.style.display = 'none';
+            }
+        }
+
+        function downloadCover() {
+            // Get the file path stored when cover was created
+            const previewSection = document.getElementById('cover-preview');
+            const filePath = previewSection.getAttribute('data-file');
+
+            if (!filePath) {
+                alert('No cover file available for download');
+                return;
+            }
+
+            // Create download link using the API endpoint
+            const link = document.createElement('a');
+            link.href = '/api/download/' + filePath;
+
+            // Extract filename from path for download attribute
+            const filename = filePath.split('/').pop();
+            link.download = filename;
+
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // AI Suggestion Functions
+        async function aiSuggestCoverTitle() {
+            const topic = prompt('What is your book about? (e.g., productivity, cooking, fiction thriller)');
+            if (!topic) return;
+
+            try {
+                const response = await fetch('/api/ai/suggest-title', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic: topic, genre: '' })
+                });
+
+                const data = await response.json();
+                if (data.success && data.title) {
+                    document.getElementById('cover-title').value = data.title;
+                    alert('✅ Title suggestion: ' + data.title);
+                } else {
+                    alert('❌ Could not generate title: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function aiSuggestCoverSubtitle() {
+            const title = document.getElementById('cover-title').value;
+            if (!title) {
+                alert('Please enter a book title first!');
+                return;
+            }
+
+            const topic = prompt('What is the main topic/theme?', '');
+            if (!topic) return;
+
+            try {
+                const response = await fetch('/api/ai/suggest-subtitle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: title, topic: topic })
+                });
+
+                const data = await response.json();
+                if (data.success && data.subtitle) {
+                    document.getElementById('cover-subtitle').value = data.subtitle;
+                    alert('✅ Subtitle suggestion: ' + data.subtitle);
+                } else {
+                    alert('❌ Could not generate subtitle: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function aiSuggestColors() {
+            const genre = prompt('What genre/mood is your book? (e.g., business, romance, thriller, professional)', 'professional');
+            if (!genre) return;
+
+            try {
+                const response = await fetch('/api/ai/suggest-colors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ genre: genre, mood: genre })
+                });
+
+                const data = await response.json();
+                if (data.success && data.colors) {
+                    // Handle both object and string formats
+                    let colorMessage = '';
+                    let primaryColor = null;
+                    let secondaryColor = null;
+
+                    if (typeof data.colors === 'object' && data.colors !== null) {
+                        // Object format: {primary: '#hex', secondary: '#hex'}
+                        primaryColor = data.colors.primary;
+                        secondaryColor = data.colors.secondary;
+                        colorMessage = `PRIMARY: ${primaryColor}\nSECONDARY: ${secondaryColor}`;
+                    } else if (typeof data.colors === 'string') {
+                        // String format: try to extract hex codes
+                        colorMessage = data.colors;
+                        const hexPattern = /#[0-9A-Fa-f]{6}/g;
+                        const colors = data.colors.match(hexPattern);
+                        if (colors && colors.length >= 1) {
+                            primaryColor = colors[0];
+                            if (colors.length >= 2) {
+                                secondaryColor = colors[1];
+                            }
+                        }
+                    }
+
+                    alert('🎨 AI Color Suggestions:\n\n' + colorMessage + '\n\nCheck the colors and adjust in the color pickers!');
+
+                    // Apply colors to inputs
+                    if (primaryColor) {
+                        document.getElementById('primary-color').value = primaryColor;
+                    }
+                    if (secondaryColor) {
+                        document.getElementById('secondary-color').value = secondaryColor;
+                    }
+                } else {
+                    alert('❌ Could not generate colors: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        async function aiSuggestSpineColor() {
+            // Check if cover is uploaded
+            const coverInput = document.getElementById('cover-input');
+            if (!coverInput.files || coverInput.files.length === 0) {
+                alert('⚠️ Please upload a cover image first!');
+                return;
+            }
+
+            // Get book title for better AI suggestions
+            const title = document.getElementById('convert-title').value || 'Untitled Book';
+
+            try {
+                // Create form data with the uploaded cover
+                const formData = new FormData();
+                formData.append('file', coverInput.files[0]);
+                formData.append('title', title);
+
+                const response = await fetch('/api/ai/suggest-spine-color', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success && data.color) {
+                    alert(`🎨 AI Spine Color Suggestion:\n\n${data.color}\n\nColor has been applied to the spine color picker!`);
+
+                    // Apply color to input
+                    document.getElementById('convert-spine-color').value = data.color;
+                } else {
+                    alert('❌ Could not generate spine color: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // Check AI status and show badge
+        async function checkAIStatus() {
+            try {
+                const response = await fetch('/api/ai/status');
+                const data = await response.json();
+                const badge = document.getElementById('nav-ai-status');
+
+                if (data.enabled) {
+                    badge.style.display = 'inline-block';
+                    // Don't override the text - it already says "Powered by Groq" in the HTML
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking AI status:', error);
+            }
+        }
+
+        // Check AI status on page load
+        checkAIStatus();
+    </script>
+</body>
+</html>

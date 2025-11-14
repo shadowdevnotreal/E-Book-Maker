@@ -1,0 +1,332 @@
+// AI Marketing & Author Tools - JavaScript
+
+// Chapter Outline Generator
+document.getElementById('outline-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('outline-title').value;
+    const genre = document.getElementById('outline-genre').value;
+    const concept = document.getElementById('outline-concept').value;
+    const chapters = document.getElementById('outline-chapters').value;
+
+    const resultDiv = document.getElementById('outline-result');
+    const contentDiv = document.getElementById('outline-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Generating chapter outline... This may take a moment.</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/generate-outline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, genre, concept, num_chapters: chapters })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatOutline(data.outline);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Chapter Generator
+document.getElementById('chapter-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('chapter-title').value;
+    const outline = document.getElementById('chapter-outline').value;
+    const style = document.getElementById('chapter-style').value;
+    const length = document.getElementById('chapter-length').value;
+
+    const resultDiv = document.getElementById('chapter-result');
+    const contentDiv = document.getElementById('chapter-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Generating chapter content... This may take a minute.</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/generate-chapter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, outline, style, length })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.chapter);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Book Description Generator
+document.getElementById('description-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('desc-title').value;
+    const genre = document.getElementById('desc-genre').value;
+    const summary = document.getElementById('desc-summary').value;
+    const tone = document.getElementById('desc-tone').value;
+
+    const resultDiv = document.getElementById('description-result');
+    const contentDiv = document.getElementById('description-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Creating book description...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, genre, summary, tone })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.description);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Proofreading Tool
+document.getElementById('proofread-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const text = document.getElementById('proofread-text').value;
+
+    const resultDiv = document.getElementById('proofread-result');
+    const contentDiv = document.getElementById('proofread-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Proofreading your text...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/proofread', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.proofread_text);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Readability Improver
+document.getElementById('readability-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const text = document.getElementById('readability-text').value;
+    const level = document.getElementById('readability-level').value;
+
+    const resultDiv = document.getElementById('readability-result');
+    const contentDiv = document.getElementById('readability-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Improving readability...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/improve-readability', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, level })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.improved_text);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Text Transformer (Expand/Summarize)
+document.getElementById('transform-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const text = document.getElementById('transform-text').value;
+    const action = document.getElementById('transform-action').value;
+
+    const resultDiv = document.getElementById('transform-result');
+    const contentDiv = document.getElementById('transform-content');
+
+    const actionText = action === 'expand' ? 'Expanding' : 'Summarizing';
+    contentDiv.innerHTML = `<div class="loading">🤖 ${actionText} your text...</div>`;
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/transform-text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, action })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.transformed_text);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// KDP Keywords Generator
+document.getElementById('keywords-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('keywords-title').value;
+    const genre = document.getElementById('keywords-genre').value;
+    const themes = document.getElementById('keywords-themes').value;
+
+    const resultDiv = document.getElementById('keywords-result');
+    const contentDiv = document.getElementById('keywords-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Generating KDP keywords...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/generate-keywords', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, genre, themes })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatKeywords(data.keywords);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Categories Suggester
+document.getElementById('categories-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('categories-title').value;
+    const description = document.getElementById('categories-description').value;
+    const genre = document.getElementById('categories-genre').value;
+
+    const resultDiv = document.getElementById('categories-result');
+    const contentDiv = document.getElementById('categories-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Suggesting best categories...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/suggest-categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, genre })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatCategories(data.categories);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Marketing Copy Generator
+document.getElementById('marketing-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById('marketing-title').value;
+    const description = document.getElementById('marketing-description').value;
+    const type = document.getElementById('marketing-type').value;
+
+    const resultDiv = document.getElementById('marketing-result');
+    const contentDiv = document.getElementById('marketing-content');
+
+    contentDiv.innerHTML = '<div class="loading">🤖 Creating marketing copy...</div>';
+    resultDiv.style.display = 'block';
+
+    try {
+        const response = await fetch('/api/ai/generate-marketing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, type })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            contentDiv.innerHTML = formatText(data.marketing_copy);
+        } else {
+            contentDiv.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+    }
+});
+
+// Formatting helper functions
+function formatOutline(outline) {
+    // Format outline with proper HTML
+    return `<div class="formatted-content">${outline.replace(/\n/g, '<br>')}</div>`;
+}
+
+function formatText(text) {
+    // Format regular text with paragraphs
+    const paragraphs = text.split('\n\n').map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    return `<div class="formatted-content">${paragraphs}</div>`;
+}
+
+function formatKeywords(keywords) {
+    // Format keywords as a list
+    if (Array.isArray(keywords)) {
+        const items = keywords.map(k => `<li>${k}</li>`).join('');
+        return `<div class="formatted-content"><ul>${items}</ul></div>`;
+    } else {
+        // If keywords is a string
+        return formatText(keywords);
+    }
+}
+
+function formatCategories(categories) {
+    // Format categories as a list
+    if (Array.isArray(categories)) {
+        const items = categories.map(c => `<li>${c}</li>`).join('');
+        return `<div class="formatted-content"><ul>${items}</ul></div>`;
+    } else {
+        // If categories is a string
+        return formatText(categories);
+    }
+}

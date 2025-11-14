@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Book Maker - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-assistant.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>E-Book Maker</h1>
+            <p class="subtitle">Professional E-Book Creation Suite</p>
+        </header>
+
+        <nav class="main-nav">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/convert">Convert</a>
+            <a href="/covers">Covers</a>
+            <a href="/watermark">Watermark</a>
+            <a href="/marketing">AI Marketing</a>
+            <a href="/settings">Settings</a>
+        </nav>
+
+        <div class="ai-status-container">
+            <span class="ai-status-badge" id="nav-ai-status" style="display: none;">
+                🤖 AI ENABLED • Powered by Groq
+            </span>
+        </div>
+
+        <main class="dashboard">
+            <div class="welcome-section">
+                <div class="welcome-icon">📚</div>
+                <h2>Welcome to E-Book Maker</h2>
+                <p>Create professional e-books, design covers, and protect your work with watermarks - all in one place.</p>
+
+                <!-- Dynamic Project Stats -->
+                <div class="quick-stats" id="project-stats">
+                    <div class="stat-item stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-value" id="stat-books">0</div>
+                        <div class="stat-label">Books Created</div>
+                    </div>
+                    <div class="stat-item stat-card">
+                        <div class="stat-icon">🎨</div>
+                        <div class="stat-value" id="stat-covers">0</div>
+                        <div class="stat-label">Covers Designed</div>
+                    </div>
+                    <div class="stat-item stat-card">
+                        <div class="stat-icon">🔄</div>
+                        <div class="stat-value" id="stat-conversions">0</div>
+                        <div class="stat-label">Conversions</div>
+                    </div>
+                    <div class="stat-item stat-card">
+                        <div class="stat-icon">💧</div>
+                        <div class="stat-value" id="stat-watermarks">0</div>
+                        <div class="stat-label">Watermarks</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Projects Section -->
+            <div class="recent-projects-section">
+                <div class="section-header">
+                    <h3>📋 Recent Projects</h3>
+                    <button class="btn btn-secondary btn-sm" id="clear-projects-btn" onclick="clearRecentProjects()">
+                        🗑️ Clear Recent Projects
+                    </button>
+                </div>
+                <div id="recent-projects-container" class="recent-projects-grid">
+                    <!-- Projects will be loaded here -->
+                    <div class="no-projects" id="no-projects-message">
+                        <p>No projects yet. Start creating to see your work here!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Document Conversion Card -->
+                <div class="card" onclick="location.href='/convert'">
+                    <div class="card-icon">📄</div>
+                    <h3>Convert Documents</h3>
+                    <p>Transform your markdown, text, or HTML files into professional EPUB, PDF, or HTML e-books.</p>
+                    <ul class="feature-list">
+                        <li>Markdown to EPUB/PDF/HTML</li>
+                        <li>Multi-chapter support</li>
+                        <li>Custom metadata</li>
+                        <li>Table of contents generation</li>
+                    </ul>
+                    <button class="btn btn-primary">Start Converting</button>
+                </div>
+
+                <!-- Cover Creation Card -->
+                <div class="card" onclick="location.href='/covers'">
+                    <div class="card-icon">🎨</div>
+                    <h3>Create Book Covers</h3>
+                    <p>Design professional e-book and paperback covers with custom graphics and text.</p>
+                    <ul class="feature-list">
+                        <li>E-book cover generator</li>
+                        <li>Paperback with spine</li>
+                        <li>Amazon KDP compliant</li>
+                        <li>Custom colors & fonts</li>
+                    </ul>
+                    <button class="btn btn-primary">Create Cover</button>
+                </div>
+
+                <!-- Watermarking Card -->
+                <div class="card" onclick="location.href='/watermark'">
+                    <div class="card-icon">💧</div>
+                    <h3>Add Watermark</h3>
+                    <p>Protect your documents with custom text or logo watermarks.</p>
+                    <ul class="feature-list">
+                        <li>Text & logo watermarks</li>
+                        <li>PDF, HTML, DOCX support</li>
+                        <li>Adjustable opacity</li>
+                        <li>Batch processing</li>
+                    </ul>
+                    <button class="btn btn-primary">Add Watermark</button>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="system-status">
+                <h3>System Status</h3>
+                <div id="dependency-status" class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Pandoc:</span>
+                        <span class="status-value" id="pandoc-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">wkhtmltopdf:</span>
+                        <span class="status-value" id="wkhtmltopdf-status">Checking...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">LaTeX:</span>
+                        <span class="status-value" id="latex-status">Checking...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Files -->
+            <div class="recent-files">
+                <h3>Recent Outputs</h3>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="ebooks">E-Books</button>
+                    <button class="tab-btn" data-tab="covers">Covers</button>
+                    <button class="tab-btn" data-tab="watermarked">Watermarked</button>
+                </div>
+                <div class="tab-content">
+                    <div id="ebooks-list" class="file-list active"></div>
+                    <div id="covers-list" class="file-list"></div>
+                    <div id="watermarked-list" class="file-list"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 E-Book Maker | All Rights Reserved</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/drag-drop.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ai-assistant.js') }}"></script>
+    <script>
+        // Check dependencies on load
+        checkDependencies();
+
+        // Load project stats
+        loadProjectStats();
+
+        // Load recent projects
+        loadRecentProjects();
+
+        // Load recent files
+        loadRecentFiles('ebooks');
+        loadRecentFiles('covers');
+        loadRecentFiles('watermarked');
+
+        // Load project statistics from API
+        async function loadProjectStats() {
+            try {
+                const response = await fetch('/api/projects/stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('stat-books').textContent = stats.total_books || 0;
+                    document.getElementById('stat-covers').textContent = stats.total_covers || 0;
+                    document.getElementById('stat-conversions').textContent = stats.total_conversions || 0;
+                    document.getElementById('stat-watermarks').textContent = stats.total_watermarks || 0;
+
+                    // Add animation to counters
+                    document.querySelectorAll('.stat-value').forEach(el => {
+                        el.style.animation = 'countUp 0.5s ease-out';
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading project stats:', error);
+            }
+        }
+
+        // Load recent projects from API
+        async function loadRecentProjects() {
+            try {
+                const response = await fetch('/api/projects/recent?limit=5');
+                const data = await response.json();
+
+                const container = document.getElementById('recent-projects-container');
+                const noProjectsMsg = document.getElementById('no-projects-message');
+
+                if (data.success && data.projects && data.projects.length > 0) {
+                    // Hide no projects message
+                    noProjectsMsg.style.display = 'none';
+
+                    // Clear container and add project cards
+                    container.innerHTML = '';
+
+                    data.projects.forEach(project => {
+                        const card = createProjectCard(project);
+                        container.appendChild(card);
+                    });
+                } else {
+                    // Show no projects message
+                    noProjectsMsg.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading recent projects:', error);
+            }
+        }
+
+        // Create a project card element
+        function createProjectCard(project) {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+
+            // Determine project icon based on type
+            const icons = {
+                'conversion': '📄',
+                'cover': '🎨',
+                'watermark': '💧',
+                'ebook': '📚'
+            };
+            const icon = icons[project.type] || '📁';
+
+            // Format date as "10/31/25 15:50 EST"
+            const date = new Date(project.created_at);
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const timezone = date.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+            const formattedDate = `${month}/${day}/${year} ${hours}:${minutes} ${timezone}`;
+
+            // Get project title
+            const title = project.title || 'Untitled Project';
+
+            // Get metadata summary
+            let metadataHTML = '';
+            if (project.metadata) {
+                if (project.metadata.author) {
+                    metadataHTML += `<p class="project-meta"><strong>Author:</strong> ${project.metadata.author}</p>`;
+                }
+                if (project.metadata.genre) {
+                    metadataHTML += `<p class="project-meta"><strong>Genre:</strong> ${project.metadata.genre}</p>`;
+                }
+                if (project.type === 'cover' && project.metadata.cover_type) {
+                    metadataHTML += `<p class="project-meta"><strong>Type:</strong> ${project.metadata.cover_type}</p>`;
+                }
+            }
+
+            // Get file count
+            const fileCount = project.files ? project.files.length : 0;
+
+            card.innerHTML = `
+                <div class="project-card-header">
+                    <span class="project-icon">${icon}</span>
+                    <span class="project-type">${project.type}</span>
+                </div>
+                <h4 class="project-title">${title}</h4>
+                <p class="project-date">${formattedDate}</p>
+                ${metadataHTML}
+                <div class="project-footer">
+                    <span class="project-files">${fileCount} file(s)</span>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Clear Recent Projects
+        async function clearRecentProjects() {
+            if (!confirm('Are you sure you want to clear all recent projects? This will not delete your output files.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/projects/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Recent projects cleared successfully', 'success');
+                    // Reload projects and stats
+                    loadRecentProjects();
+                    loadProjectStats();
+                } else {
+                    showToast('Failed to clear projects: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error clearing projects:', error);
+                showToast('Error clearing projects', 'error');
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update active content
+                document.querySelectorAll('.file-list').forEach(list => list.classList.remove('active'));
+                document.getElementById(`${tab}-list`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

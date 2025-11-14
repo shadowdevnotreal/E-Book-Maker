@@ -1,0 +1,454 @@
+{
+  "templates": [
+    {
+      "id": "modern-minimal",
+      "name": "Modern Minimal",
+      "category": "minimal",
+      "description": "Clean design with bold typography",
+      "colors": {
+        "background": "#FFFFFF",
+        "title": "#1a1a1a",
+        "subtitle": "#666666",
+        "accent": "#667eea"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "modern-minimal.png"
+    },
+    {
+      "id": "dark-elegant",
+      "name": "Dark Elegant",
+      "category": "dark",
+      "description": "Sophisticated dark theme",
+      "colors": {
+        "background": "#1a1a1a",
+        "title": "#ffffff",
+        "subtitle": "#cccccc",
+        "accent": "#d4af37"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "dark-elegant.png"
+    },
+    {
+      "id": "gradient-sunset",
+      "name": "Gradient Sunset",
+      "category": "gradient",
+      "description": "Warm gradient background",
+      "colors": {
+        "background": "linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)",
+        "title": "#ffffff",
+        "subtitle": "#ffffff",
+        "accent": "#ffffff"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "gradient-sunset.png"
+    },
+    {
+      "id": "gradient-ocean",
+      "name": "Gradient Ocean",
+      "category": "gradient",
+      "description": "Cool ocean gradient",
+      "colors": {
+        "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "title": "#ffffff",
+        "subtitle": "#ffffff",
+        "accent": "#ffffff"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "gradient-ocean.png"
+    },
+    {
+      "id": "gradient-forest",
+      "name": "Gradient Forest",
+      "category": "gradient",
+      "description": "Natural green gradient",
+      "colors": {
+        "background": "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+        "title": "#ffffff",
+        "subtitle": "#ffffff",
+        "accent": "#ffffff"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "gradient-forest.png"
+    },
+    {
+      "id": "vintage-paper",
+      "name": "Vintage Paper",
+      "category": "vintage",
+      "description": "Classic aged paper look",
+      "colors": {
+        "background": "#f4e8d0",
+        "title": "#3d2817",
+        "subtitle": "#6b5d4f",
+        "accent": "#8b4513"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "vintage-paper.png"
+    },
+    {
+      "id": "tech-grid",
+      "name": "Tech Grid",
+      "category": "tech",
+      "description": "Futuristic tech pattern",
+      "colors": {
+        "background": "#0a192f",
+        "title": "#64ffda",
+        "subtitle": "#8892b0",
+        "accent": "#64ffda"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "tech-grid.png"
+    },
+    {
+      "id": "romance-pink",
+      "name": "Romance Pink",
+      "category": "romance",
+      "description": "Soft romantic theme",
+      "colors": {
+        "background": "#ffe0f0",
+        "title": "#c71585",
+        "subtitle": "#db7093",
+        "accent": "#ff69b4"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "romance-pink.png"
+    },
+    {
+      "id": "thriller-red",
+      "name": "Thriller Red",
+      "category": "thriller",
+      "description": "Bold suspenseful design",
+      "colors": {
+        "background": "#1a0000",
+        "title": "#ff0000",
+        "subtitle": "#cc0000",
+        "accent": "#990000"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "thriller-red.png"
+    },
+    {
+      "id": "business-blue",
+      "name": "Business Blue",
+      "category": "business",
+      "description": "Professional corporate look",
+      "colors": {
+        "background": "#f8f9fa",
+        "title": "#003d82",
+        "subtitle": "#495057",
+        "accent": "#0056b3"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "business-blue.png"
+    },
+    {
+      "id": "nature-green",
+      "name": "Nature Green",
+      "category": "nature",
+      "description": "Fresh natural theme",
+      "colors": {
+        "background": "#e8f5e9",
+        "title": "#1b5e20",
+        "subtitle": "#388e3c",
+        "accent": "#4caf50"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "nature-green.png"
+    },
+    {
+      "id": "fantasy-purple",
+      "name": "Fantasy Purple",
+      "category": "fantasy",
+      "description": "Magical mystical design",
+      "colors": {
+        "background": "#4a148c",
+        "title": "#f3e5f5",
+        "subtitle": "#ce93d8",
+        "accent": "#ab47bc"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "fantasy-purple.png"
+    },
+    {
+      "id": "scifi-cyan",
+      "name": "Sci-Fi Cyan",
+      "category": "scifi",
+      "description": "Futuristic science fiction",
+      "colors": {
+        "background": "#000428",
+        "title": "#00f2ff",
+        "subtitle": "#4dd0e1",
+        "accent": "#00bcd4"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "scifi-cyan.png"
+    },
+    {
+      "id": "academic-gray",
+      "name": "Academic Gray",
+      "category": "academic",
+      "description": "Scholarly professional style",
+      "colors": {
+        "background": "#eceff1",
+        "title": "#263238",
+        "subtitle": "#546e7a",
+        "accent": "#607d8b"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "academic-gray.png"
+    },
+    {
+      "id": "cookbook-orange",
+      "name": "Cookbook Orange",
+      "category": "cooking",
+      "description": "Warm appetizing design",
+      "colors": {
+        "background": "#fff3e0",
+        "title": "#e65100",
+        "subtitle": "#f57c00",
+        "accent": "#ff9800"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "cookbook-orange.png"
+    },
+    {
+      "id": "travel-teal",
+      "name": "Travel Teal",
+      "category": "travel",
+      "description": "Adventure wanderlust theme",
+      "colors": {
+        "background": "#e0f2f1",
+        "title": "#00695c",
+        "subtitle": "#00897b",
+        "accent": "#26a69a"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "travel-teal.png"
+    },
+    {
+      "id": "health-mint",
+      "name": "Health Mint",
+      "category": "health",
+      "description": "Fresh wellness theme",
+      "colors": {
+        "background": "#f1f8f4",
+        "title": "#1a5c37",
+        "subtitle": "#2d8659",
+        "accent": "#52b788"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "health-mint.png"
+    },
+    {
+      "id": "horror-black",
+      "name": "Horror Black",
+      "category": "horror",
+      "description": "Dark scary atmosphere",
+      "colors": {
+        "background": "#000000",
+        "title": "#8b0000",
+        "subtitle": "#666666",
+        "accent": "#990000"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "horror-black.png"
+    },
+    {
+      "id": "children-rainbow",
+      "name": "Children Rainbow",
+      "category": "children",
+      "description": "Bright playful colors",
+      "colors": {
+        "background": "linear-gradient(135deg, #ffd93d 0%, #ff6b9d 50%, #c8e6f0 100%)",
+        "title": "#ffffff",
+        "subtitle": "#ffffff",
+        "accent": "#ffffff"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "children-rainbow.png"
+    },
+    {
+      "id": "poetry-cream",
+      "name": "Poetry Cream",
+      "category": "poetry",
+      "description": "Delicate artistic style",
+      "colors": {
+        "background": "#faf7f2",
+        "title": "#5d4037",
+        "subtitle": "#8d6e63",
+        "accent": "#a1887f"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "poetry-cream.png"
+    },
+    {
+      "id": "biography-sepia",
+      "name": "Biography Sepia",
+      "category": "biography",
+      "description": "Historical timeless feel",
+      "colors": {
+        "background": "#f5e6d3",
+        "title": "#3e2723",
+        "subtitle": "#6d4c41",
+        "accent": "#8d6e63"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "biography-sepia.png"
+    },
+    {
+      "id": "finance-gold",
+      "name": "Finance Gold",
+      "category": "finance",
+      "description": "Wealthy prestigious look",
+      "colors": {
+        "background": "#1a1a1a",
+        "title": "#ffd700",
+        "subtitle": "#daa520",
+        "accent": "#b8860b"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "finance-gold.png"
+    },
+    {
+      "id": "mystery-indigo",
+      "name": "Mystery Indigo",
+      "category": "mystery",
+      "description": "Intriguing enigmatic style",
+      "colors": {
+        "background": "#1a237e",
+        "title": "#e8eaf6",
+        "subtitle": "#9fa8da",
+        "accent": "#7986cb"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "mystery-indigo.png"
+    },
+    {
+      "id": "self-help-sky",
+      "name": "Self-Help Sky",
+      "category": "selfhelp",
+      "description": "Uplifting motivational theme",
+      "colors": {
+        "background": "#e3f2fd",
+        "title": "#01579b",
+        "subtitle": "#0277bd",
+        "accent": "#0288d1"
+      },
+      "fonts": {
+        "title": "Arial",
+        "subtitle": "Arial"
+      },
+      "layout": "centered",
+      "preview": "self-help-sky.png"
+    },
+    {
+      "id": "spiritual-lavender",
+      "name": "Spiritual Lavender",
+      "category": "spiritual",
+      "description": "Peaceful meditative design",
+      "colors": {
+        "background": "#f3e5f5",
+        "title": "#4a148c",
+        "subtitle": "#7b1fa2",
+        "accent": "#9c27b0"
+      },
+      "fonts": {
+        "title": "Georgia",
+        "subtitle": "Georgia"
+      },
+      "layout": "centered",
+      "preview": "spiritual-lavender.png"
+    }
+  ]
+}
