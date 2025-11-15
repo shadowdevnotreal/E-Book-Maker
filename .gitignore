@@ -1,0 +1,119 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+*.egg
+*.pyc
+
+# Flask
+instance/
+.webassets-cache
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+temp_*
+.setup_state
+*_converted_*.jpg
+*_converted_*.pdf
+
+# Output directories - keep structure, ignore generated content
+output/ebooks/*
+output/covers/*
+output/watermarked/*
+!output/ebooks/.gitkeep
+!output/covers/.gitkeep
+!output/watermarked/.gitkeep
+
+# Test results - generated files (exclude from git)
+output/test_results/*
+!output/test_results/.gitkeep
+
+# Test covers - generated files (exclude from git)
+output/test_covers/*
+!output/test_covers/.gitkeep
+
+# Sample files - keep for documentation/testing
+# output/sample_files/
+
+# Uploads (temporary user uploads)
+output/uploads/*
+!output/uploads/.gitkeep
+
+# User content - work in progress (exclude from git)
+chapters/*
+!chapters/README.md
+appendices/*
+!appendices/README.md
+drafts/*
+!drafts/README.md
+
+# User assets (exclude from git)
+assets/images/*
+!assets/images/README.md
+assets/logos/*
+!assets/logos/README.md
+
+# Configuration
+config/user_config.json
+config/ai_config.json
+config/*.secret
+config/*.local
+
+# GitHub preparation files (temporary)
+GITHUB_READY.md
+PUSH_READY.md
+
+# KDP Excel calculator (large file, users can download from Amazon)
+KDP_Print_File_Setup_Calculator*.xlsm
+
+# Setup/Installer files (these belong in GitHub Releases, not in git)
+setup/*.exe
+setup/*.msi
+setup/*.zip
+setup/*.tar.gz
+setup/*.deb
+setup/*.rpm
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Watermark metadata
+.watermark.json
+*.watermark.json
+
+# Claude Code configuration (optional)
+# .claude/

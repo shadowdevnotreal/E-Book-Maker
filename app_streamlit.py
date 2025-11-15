@@ -42,12 +42,10 @@ st.set_page_config(
 
 # Initialize session state
 if 'ai_assistant' not in st.session_state:
-    # Pass Streamlit secrets to GroqAssistant for TOML secrets support
-    try:
-        st.session_state.ai_assistant = GroqAssistant(streamlit_secrets=st.secrets)
-    except:
-        # Fallback if secrets are not available
-        st.session_state.ai_assistant = GroqAssistant()
+    # SECURITY: Secrets are disabled by default to prevent cloud API key exposure
+    # Users must enter their own API keys via the UI
+    # For local development only, you can enable secrets by setting allow_secrets=True
+    st.session_state.ai_assistant = GroqAssistant()
 
 # Check for system dependencies
 if 'pandoc_available' not in st.session_state:
@@ -1156,52 +1154,18 @@ elif page == "🤖 AI Settings":
     if ai_enabled:
         api_key_source = st.session_state.ai_assistant.get_api_key_source()
         if api_key_source:
-            if api_key_source == "secrets.toml":
-                st.success(f"✅ API Key loaded from **{api_key_source}**")
-                st.info("💡 Using Streamlit secrets for secure API key storage")
-            else:
-                st.info(f"ℹ️ API Key loaded from **{api_key_source}**")
+            st.info(f"ℹ️ API Key loaded from **{api_key_source}**")
         st.markdown("---")
 
     # API Key Configuration
-    st.markdown("### API Key Configuration")
-
-    # Show instructions for secrets.toml
-    with st.expander("🔒 Recommended: Use Streamlit Secrets (secrets.toml)", expanded=False):
-        st.markdown("""
-**Benefits:**
-- ✅ Secure - Never commit API keys to git
-- ✅ Convenient - No need to enter key in UI
-- ✅ Automatic - Works immediately on app start
-
-**Setup:**
-1. Create a file `.streamlit/secrets.toml` in your project root
-2. Add your API key:
-   ```toml
-   GROQ_API_KEY = "gsk_your_api_key_here"
-   ```
-3. Restart the Streamlit app
-4. The API key will be automatically loaded!
-
-**Important:** Add `.streamlit/secrets.toml` to your `.gitignore` to avoid committing secrets.
-        """)
-
-        # Check if secrets file exists
-        secrets_path = Path(".streamlit/secrets.toml")
-        if secrets_path.exists():
-            st.success("✅ Found `.streamlit/secrets.toml`")
-        else:
-            st.warning("⚠️ `.streamlit/secrets.toml` not found")
-
-    st.markdown("---")
-    st.markdown("### Manual API Key Entry")
-    st.caption("Alternative: Enter your API key directly (stored in config file)")
+    st.markdown("### 🔑 API Key Setup")
+    st.info("💡 **Get your FREE Groq API key at:** [console.groq.com/keys](https://console.groq.com/keys)")
 
     api_key_input = st.text_input(
-        "Groq API Key",
+        "Enter Your Groq API Key",
         type="password",
         placeholder="gsk_...",
-        help="Get your free API key at groq.com"
+        help="Your API key is stored locally and never shared"
     )
 
     if st.button("💾 Save & Test API Key", type="primary"):

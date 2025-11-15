@@ -63,13 +63,14 @@ class GroqAssistant:
         }
     }
 
-    def __init__(self, config_path: str = "config/ai_config.json", streamlit_secrets=None):
+    def __init__(self, config_path: str = "config/ai_config.json", streamlit_secrets=None, allow_secrets: bool = False):
         """
         Initialize Groq assistant
 
         Args:
             config_path: Path to AI configuration file
             streamlit_secrets: Streamlit secrets object (optional)
+            allow_secrets: If True, allow loading from secrets.toml (LOCAL ONLY - disabled for cloud)
         """
         self.config_path = Path(config_path)
         self.config = self._load_config()
@@ -77,13 +78,13 @@ class GroqAssistant:
         self.enabled = False
         self.api_key_source = None  # Track where the API key came from
 
-        # Priority 1: Check Streamlit secrets first
+        # Priority 1: Check Streamlit secrets ONLY if explicitly allowed (local development only)
         api_key = None
-        if streamlit_secrets is not None:
+        if allow_secrets and streamlit_secrets is not None:
             try:
                 api_key = streamlit_secrets.get("GROQ_API_KEY") or streamlit_secrets.get("groq_api_key")
                 if api_key:
-                    self.api_key_source = "secrets.toml"
+                    self.api_key_source = "secrets.toml (local)"
             except:
                 pass
 
